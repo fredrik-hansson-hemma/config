@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<logging:configuration xmlns:logging="http://www.sas.com/xml/logging/1.0/">
+
+   <!-- Unix System Facility Appender, emits events to the Unix system log -->
+   <appender name="UnixSysLog" class="UNXFacilityAppender">
+      <param name="facility" value="syslog"/>
+      <param name="facilitycode" value="log_user"/>
+      <filter class="RepeatMatchFilter">
+      <param name="AcceptOnMatch" value="false"/>
+      </filter>      
+      <layout>
+         <param name="ConversionPattern" value="%-5p [%t] :%u - %m"/>
+      </layout>
+   </appender>
+
+   <!-- Batch File Appender, match the output log file name to the input -log statement -->
+   <appender class="FileAppender" name="BatchFileAppender">
+      <param name="Append" value="false"/>
+      <param name="Unique" value="true"/>
+      <param name="FileNamePattern" value="%S{App.Log}%d{yyyy.MM.dd_hh.mm.ss}.log"/>
+      <layout>
+         <param name="ConversionPattern" value="%m"/>
+      </layout>
+   </appender>
+
+   <!-- Caution: Do NOT edit or change this appender configuration        -->
+   <!-- Batch Server Appender: Emit log messages to DI Studio Clients -->
+   <appender name="ARMFilteringAppender" class="FilteringAppender">
+      <appender-ref ref="BatchFileAppender"/>
+      <filter class="StringMatchFilter">
+         <param name="StringToMatch" value="STOP"/>
+         <param name="AcceptOnMatch" value="true"/>
+      </filter>
+      <filter class="DenyAllFilter"/>
+      <layout>
+         <param name="ConversionPattern"
+                value=" "/>
+      </layout>
+   </appender>
+
+
+   <!-- Caution: Do NOT edit or change this appender configuration        -->
+   <!-- Performance ARM Appender -->
+   <appender name="ARM" class="ARMAppender">
+      <param name="GetTimes" value="true"/>
+      <param name="AppName" value="BatchServer"/>
+      <param name="GroupName" value="SAS"/>
+      <appender-ref ref="ARMFilteringAppender"/>
+   </appender>
+
+   <!-- Caution: Do NOT edit or change this logger configuration          -->
+   <!-- Performance ARM message logger -->
+   <logger name="Perf.ARM" additivity="false">
+      <level value="Error"/>
+      <appender-ref ref="ARM"/>
+   </logger>
+
+   <!-- Application messages are routed to the BatchFileAppender          -->
+   <logger name="App">
+      <level value="Info"/>
+      <appender-ref ref="BatchFileAppender"/>
+   </logger>
+
+   <!-- Administration message logger -->
+   <logger name="Admin.Session" additivity="false">
+      <level value="Error"/>
+      <appender-ref ref="UnixSysLog"/>
+   </logger>
+
+   <!-- Logging Facility logger -->
+   <logger name="Logging">
+       <level value="Error"/>
+       <appender-ref ref="UnixSysLog"/>
+   </logger>
+
+   <!-- Root logger -->
+   <root>
+      <level value="error"/>
+   </root>
+
+</logging:configuration>

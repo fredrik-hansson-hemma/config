@@ -1,0 +1,20 @@
+DEPLOYMENT_TESTSRV_DIR=
+DEPLOYMENT_TESTSRV_LOGS=
+DEPLOYMENT_TESTSRV_CONTEXT=
+
+  if [ -x "$DEPLOYMENT_TESTSRV_DIR/DeploymentTesterServer.sh" ]
+  then
+  {
+    start_deployment_testsrv;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$DEPTESTSRV_INSTANCE_IS_UP";
+    else $Logmsg "$DEPTESTSRV_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$DEPTESTSRV_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$DEPTESTSRV_INSTANCE_IS_DOWN"
+  }
+  fi
+

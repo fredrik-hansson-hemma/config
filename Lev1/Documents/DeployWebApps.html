@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html> 
+<head> 
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+<title>Summary of Deploy Web Applications</title> 
+<STYLE> 
+BODY {color: #000000; font-family: Arial, Helvetica, sans-serif;} 
+H1 {color: #000000; font-family: Arial, Helvetica, sans-serif;} 
+H2 {color: #000000; font-family: Arial, Helvetica, sans-serif; padding-top: 1em;} 
+H3 {color: #000000; font-family: Arial, Helvetica, sans-serif; padding-top: 1em;} 
+H4 {color: #000000; font-family: Arial, Helvetica, sans-serif;} 
+DT {color: #000000; font-family: Arial, Helvetica, sans-serif;} 
+DD {color: #000000; font-family: Arial, Helvetica, sans-serif} 
+H5 {color: #000000; font-family: Arial, Helvetica, sans-serif} 
+P  {color: #000000; font-family: Arial, Helvetica, sans-serif} 
+LI {color: #000000; font-family: Arial, Helvetica, sans-serif} 
+TD {color: #000000; font-family: Arial, Helvetica, sans-serif} 
+CODE {color: #000000; font-family: Courier, serif} 
+.detailTable {border-top: 1px solid #ddd; border-left: 1px solid #ddd; border-right: 1px solid #ddd} 
+.detailLabel {padding: 5px; text-align: right; font-weight: bold; border-bottom: 1px solid #ddd; border-right: 1px solid #ddd; padding-right: 10px} 
+.detailContent {padding: 5px; border-bottom: 1px solid #ddd} 
+</STYLE> 
+<body bgcolor="#FFFFFF" marginheight="0" marginWidth="5" topmargin="0" leftmargin="5"> 
+</head> 
+
+<TABLE border=0 cellPadding=0 cellSpacing=0 width="100%"> 
+<TR> 
+<td width="129" align="left" valign="top"><img src="/opt/sas/sashome/SASDeploymentManager/9.4/products/cfgwizard__94420__prt__xx__sp0__1/Config/documents/images/colorBar.jpg" alt="Color bar" width="550" height="60"></td> 
+<td align="right" valign="top" width="100%" class="navlink"><A href="http://www.sas.com"><IMG src="/opt/sas/sashome/SASDeploymentManager/9.4/products/cfgwizard__94420__prt__xx__sp0__1/Config/documents/images/saslogo.jpg" alt="SAS - The Power to Know" width="119" height="60" border="0"></A></td> 
+</TR> 
+</TABLE> 
+<div style="border: 1px solid #000000; border-left:none; border-right:none;"><img src="/opt/sas/sashome/SASDeploymentManager/9.4/products/cfgwizard__94420__prt__xx__sp0__1/Config/documents/images/spacer.gif" width="1" height="4" alt=""></div> 
+<center><h1>Summary of Deploy Web Applications<br> for config-Lev1</h1></center>
+<h1>Information</h1> 
+<p>A complete summary of the deployment process can be found in <a href="DeploymentSummary.html" target="_blank">DeploymentSummary.html</a>.This summary details what steps of the deployment process completed successfully and what steps did not.Configuration logs for each web application are located in <a href="/opt/sas/config/Lev1/Logs/Configure" target="_blank">/opt/sas/config/Lev1/Logs/Configure</a>.Review the logs to ensure there were no errors.</p><p>Additional instructions are provided below that may be applicable to your environment.  Ensure that you read and complete any applicable steps.</p>
+<h1>Backups of Previous Web Application Versions</h1> 
+<p>Before the SAS Deployment Manager redeploys a web application, it creates backups of the existing version and the context file. The backups are as follows:</p> 
+<ul> 
+<li>Application backups are in the <i>SAS-config-dir\Levn\Web\WebAppServer\SASServer1_1\sas_webapps\Backup</i> directory.</li> 
+<br/> 
+<li>Context file backups are in the <i>SAS-config-dir\Levn\Web\WebAppServer\SASServer1_1\conf\Catalina\localhost\Backup</i> directory.</li> 
+</ul> 
+<p>A timestamp is appended to the web application directory and context file to indicate when the backup was performed. If you frequently redeploy web applications, you can consume disk space. You can delete backup files that are no longer needed.</p> 
+<h1>Additional Steps for Horizontal Clusters</h1> 
+<p>To redeploy web applications on additional machines in a horizontal cluster, follow these steps:</p> 
+<ol> 
+<li>Stop the SAS Web Application Server instances on the additional machines.</li> 
+<br/> 
+<li>Copy the updated application EAR and WAR files from the primary machine to the staging directory on the additional machines. 
+<br/>The staging directory is typically <i>SAS-config-dir\Levn\Web\Staging</i>.</li> 
+<br/> 
+<li>Use the <i>appsrvconfig</i> command on each additional machine to undeploy and redeploy the web applications: 
+<br/> 
+<br/><i>appsrvconfig.cmd -e run undeploy application application-name server SASServer1</i> 
+<br/> 
+<br/><i>appsrvconfig.cmd -e run deploy application application-name server SASServer1</i> 
+<br/> 
+<br/>The command is located in the <i>SAS-config-dir\Levn\Web\Scripts\AppServer</i> directory. On UNIX deployments, the command is appsrvconfig.sh. 
+</li> 
+<br/> 
+<li>Start the SAS Web Application Server instances on the additional machines.</li> 
+<br/> 
+<li>Restart SAS Web Server.</li> 
+</ol> 
+<p>You can also rerun the SAS Deployment Wizard and reconfigure the SAS Web Application Servers on clustered member machines. This will copy everything from the staging directory on the primary and deploy to the SAS Web Application Servers on clustered member machines.</p> 
+<div style="border: 1px solid #000000; border-left:none; border-right:none;"><img src="images/spacer.gif" width="1" height="4" alt=""></div>  
+<p>Copyright &copy; 2016, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved</p> 
+</body></html> 

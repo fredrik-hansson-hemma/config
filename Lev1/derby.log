@@ -1,0 +1,40 @@
+----------------------------------------------------------------
+2016-11-20 00:00:48.705 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance a816c00e-0158-7f09-0967-0000f017e680
+on database directory /opt/sas/config/Lev1/Backup/dropzone/2016-11-20T01_00_11/content/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2016-11-20 00:00:56.743 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 9a4840c2-0158-7f09-0967-0000f017e680
+on database directory /opt/sas/config/Lev1/Backup/dropzone/2016-11-20T01_00_11/content/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2016-11-20 00:22:29.903 GMT:
+Shutting down instance 9a4840c2-0158-7f09-0967-0000f017e680
+----------------------------------------------------------------
+
+2016-11-20 00:22:30.523 GMT:
+Shutting down instance a816c00e-0158-7f09-0967-0000f017e680
+----------------------------------------------------------------
+----------------------------------------------------------------
+2016-11-27 00:00:47.217 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance bc6510e9-0158-7f09-0967-0000f017e680
+on database directory /opt/sas/config/Lev1/Backup/dropzone/2016-11-27T01_00_11/content/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2016-11-27 00:00:53.460 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 8515919d-0158-7f09-0967-0000f017e680
+on database directory /opt/sas/config/Lev1/Backup/dropzone/2016-11-27T01_00_11/content/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2016-11-27 00:18:36.042 GMT:
+Shutting down instance 8515919d-0158-7f09-0967-0000f017e680
+----------------------------------------------------------------
+
+2016-11-27 00:18:36.689 GMT:
+Shutting down instance bc6510e9-0158-7f09-0967-0000f017e680
+----------------------------------------------------------------

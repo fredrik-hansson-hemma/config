@@ -1,0 +1,17 @@
+OBJECT_SPAWNER_DIR=
+
+    if [ -f "$OBJECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+      pid=`cat "$OBJECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME"`
+      kill -0 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         $Logmsg "$SASOBJSP_INSTANCE_IS_UP"
+      else
+         $Logmsg "$SASOBJSP_INSTANCE_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$SASOBJSP_INSTANCE_IS_DOWN"
+    fi
+

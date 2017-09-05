@@ -1,0 +1,7 @@
+REMOTE_SERVICES_DIR=
+REMOTE_SERVICES_LOGS=
+
+  if [ -x "$REMOTE_SERVICES_DIR/RemoteServices.sh" ];
+  then stop_remote_services; fi;
+
+

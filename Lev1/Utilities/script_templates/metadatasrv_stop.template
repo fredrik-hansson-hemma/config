@@ -1,0 +1,7 @@
+METADATA_SERVER_DIR=
+METADATA_SERVER_LOGS=
+
+  if [ -x "$METADATA_SERVER_DIR/MetadataServer.sh" ];
+  then stop_metadata_server; fi;
+
+

@@ -1,0 +1,17 @@
+CONNECT_SPAWNER_DIR=
+
+    if [ -f "$CONNECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+      pid=`cat "$CONNECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME"`
+      kill -0 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         $Logmsg "$SASCONN_INSTANCE_IS_UP"
+      else
+         $Logmsg "$SASCONN_INSTANCE_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$SASCONN_INSTANCE_IS_DOWN"
+    fi
+

@@ -1,0 +1,20 @@
+CONNECT_SPAWNER_DIR=
+CONNECT_SPAWNER_LOGS=
+CONNECT_SPAWNER_CONTEXT=
+
+  if [ -x "$CONNECT_SPAWNER_DIR/ConnectSpawner.sh" ]
+  then
+  {
+    start_connect_spawner;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASCONN_INSTANCE_IS_UP";
+    else $Logmsg "$SASCONN_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASCONN_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASCONN_INSTANCE_SCRIPT_DOWN"
+  }
+  fi
+

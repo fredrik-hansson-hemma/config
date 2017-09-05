@@ -1,0 +1,17 @@
+REMOTE_SERVICES_DIR=
+
+    if [ -f "$REMOTE_SERVICES_DIR/server.pid" ];
+    then
+    {
+      pid=`cat "$REMOTE_SERVICES_DIR/server.pid"`
+      kill -0 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         $Logmsg "$SASREMSRV_INSTANCE_IS_UP"
+      else
+         $Logmsg "$SASREMSRV_INSTANCE_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$SASREMSRV_INSTANCE_IS_DOWN"
+    fi
+

@@ -1,0 +1,20 @@
+OBJECT_SPAWNER_DIR=
+OBJECT_SPAWNER_LOGS=
+OBJECT_SPAWNER_CONTEXT=
+
+  if [ -x "$OBJECT_SPAWNER_DIR/ObjectSpawner.sh" ]
+  then
+  {
+    start_object_spawner;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASOBJSP_INSTANCE_IS_UP";
+    else $Logmsg "$SASOBJSP_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASOBJSP_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASOBJSP_INSTANCE_IS_DOWN"
+  }
+  fi
+

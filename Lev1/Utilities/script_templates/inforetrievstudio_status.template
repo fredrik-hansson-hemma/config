@@ -1,0 +1,19 @@
+IRSS_SERVER_DIR=
+PID_FILE="$IRSS_SERVER_DIR/work/information-retrieval-studio-server.pid"
+
+    if [ -r "$PID_FILE" ];
+    then
+    {
+      pid=`cat "$PID_FILE"`
+      kill -0 $pid >/dev/null 2>&1
+
+      if [ "$?" -eq 0 ]; then
+        $Logmsg "$SASIRSS_IS_UP"
+      else
+        $Logmsg "$SASIRSS_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$SASIRSS_IS_DOWN"
+    fi
+

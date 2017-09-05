@@ -1,0 +1,54 @@
+
+
+#
+# Main processing routine
+#
+
+# Source level_env.sh from this directory to get the value of the
+# SERVER_PID_FILE_NAME variable
+LEVELDIR= 
+. $LEVELDIR/level_env.sh
+
+# To avoid protection issues for installs mounted over NFS, rerun
+# ourselves as the UID that owns the installed SAS code.
+#
+#echo UID is `$WHOAMI`
+
+if [ `$WHOAMI` != "$SERVERUSER" ];
+then
+{
+#echo Invoking su $SERVERUSER -c $0 $1
+
+  su "$SERVERUSER" -c "$0 $1"
+  exit $?
+}
+fi
+
+case "$1" in
+  start)
+    start_servers;
+    exit $?
+    ;;
+
+  stop)
+    stop_servers;
+    ;;
+
+  restart|reload)
+    stop_servers;
+    sleep 15;           # let everything quiesce
+    start_servers;
+    exit $?
+    ;;
+
+  status)
+    server_status;
+    exit $?
+    ;;
+
+  *)
+    $Logmsg "Usage $0 {$STARTCMD|$STOPCMD|$RESTARTCMD|$STATUSCMD}"
+    exit 1;
+
+esac
+

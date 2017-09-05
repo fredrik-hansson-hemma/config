@@ -1,0 +1,1254 @@
+
+Logmsg=logmsg
+
+#*****
+# As of SAS 9.3, most of the EBI servers' log file names now contain
+# the local short host name also. The following symbol defines that name
+# for use in the check routines below.
+#*****
+SHOSTNAME=`hostname | awk -F. '{ printf $1 }' `
+
+#*****
+# The following variable sets the number of, and delay between attempts
+# to start each SAS server. Each number is the sleep seconds to delay 
+# before the next try. You probably don't need to change these.
+#*****
+RETRY_SERIES="2 2 2 5 5 5 5 5 5 5 5 5 5 5"
+
+#*****
+#
+# Don't change anything beyond here.
+#
+#*****
+
+#****
+# Subroutines/Functions
+#****
+
+logmsg()
+{
+# This can be modified to use local logging protocols or files.
+# All messages issued directly by this script come through this routine.
+
+  echo "$*"
+
+}
+
+
+is_server_up()
+{
+#
+# SAS servers typically write log information into a server-related 
+# subdirectory, using logfile names that have the date encoded in them,
+# and rotate to a new logfile each day. The name format is typically of
+# the form:
+#
+#    SomeServer_YYYY-MM-DD_HOSTNAME_NNNNN.log
+#
+# HOSTNAME is the short form of this machine's hostname
+# NNNNN is the server's process ID.
+#
+#
+# Returns 1 if server is up, 0 if failure
+#
+######
+# Takes as inputs the environment variables:
+#
+# SERVER_PID_FILE
+#            pointer to the process ID of the running server (from 
+#            the ($SERVER_PID_FILE_NAME|server.pid) file).
+# SLOGNAME   prefix name of the server logfile, e.g. "MetadataServer"
+# LOGDIR     directory where the logfiles are found
+# SERVER_UP  log message that indicates that the server is alive
+# SCONTEXT   server directory context (if any), "NULL" if none
+# SHOSTNAME  short form of this machine's hostname
+#
+# The quick-and-dirty way to see if the server is up is to issue a
+# "kill -0 pid" against it. The following is a bit more robust in that
+# it checks the server log file to see if the server made it all the
+# way to the "listening for connections" stage, or equivalent.
+#
+
+#
+# First, wait for the server to create a ($SERVER_PID_FILE_NAME|server.pid) 
+# file. If that doesn't happen, we can short-circuit the whole 
+# log check because the server didn't make it up.
+
+#echo SERVER_PID_FILE is $SERVER_PID_FILE
+
+  MATCH=
+  for st in $RETRY_SERIES
+  do
+    sleep $st
+    if [ -f "$SERVER_PID_FILE" ];
+    then
+    {
+#echo Got server PID file
+      MATCH=yes
+      break;
+    }
+    fi
+  done
+  if [ -z "$MATCH" ];
+  then
+  {
+#echo No server PID file, giving up
+    return 0;  # never found a PID file, so server isn't running
+  }
+  fi
+#
+# Generate a log file name given today's date.
+#
+#echo generate log
+#echo scripttime $SCRIPT_TIME
+#echo logname $SLOGNAME
+#echo context $SCONTEXT
+
+  SERVER_PID=`cat "$SERVER_PID_FILE"`
+  CHKLOG="`echo $SLOGNAME $SCRIPT_TIME $SHOSTNAME $SERVER_PID | awk '{ printf "%s_%s-%s-%s_%s_%s.log", $1, substr($2,1,4),substr($2,5,2),substr($2,7,2), $3, $4 }'`"
+  if [ "$SCONTEXT" != "NULL" ];
+  then
+    CHKLOG="${SCONTEXT}_${CHKLOG}"
+  fi
+
+#echo "server PID is" $SERVER_PID
+#echo "logfile name is" $CHKLOG
+#
+#
+# Let the server come up to speed, then retry checking the log
+# a few times before deciding the server didn't make it up.
+# The numbers in RETRY_SERIES are sleep times (in seconds) before retry.
+#
+  MATCH=
+  for st in $RETRY_SERIES
+  do
+    sleep $st
+#echo do grep
+    $GREP "$SERVER_UP" "$LOGDIR/$CHKLOG" > /dev/null 2>&1
+    if [ "$?" -eq 0 ];
+    then
+    {
+#echo
+#echo
+#echo grep match
+#echo SERVER_UP is "$SERVER_UP"
+#echo LOG is "$LOGDIR/$CHKLOG"
+
+#
+# In some instances the last log line isn't terminated with
+# a newline. Some OS tail commands will combine this with the last line that 
+# did have a newline, for example if you execute 
+#    cat foo | tail -n 1
+#
+# To fix this, there is an embedded awk in the pipe to add newlines
+#
+      MATCH=`$GREP "$SERVER_UP" "$LOGDIR/$CHKLOG" | awk '{ printf "%s\n", $0 }' | ${TAIL}1`;
+#echo checking $MATCH
+
+#
+# Check that the message occured after the start time of this script to
+# avoid any preexisting runs in an appending log file.
+#
+      check_match; 
+      if [ "$?" -eq 1 ];
+      then return 1;  # found a matching entry and it's newer than this run
+      fi
+    }
+    fi
+  done
+#
+# Last chance, the day may have rolled over while this script was running.
+# Check one more time using the new day's log file (if any).
+#
+  new_day_match;
+  if [ "$?" -eq 1 ];
+  then return 1;   # got a valid match
+  else return 0;
+  fi
+}
+
+is_atypical_server_up()
+{
+#
+# SAS servers typically write log information into a server-related 
+# subdirectory, using logfile names that have the date encoded in them,
+# and rotate to a new logfile each day. A few older servers are special cases
+# (for now) in that they write log data to a specific, non-rotating logfile
+# and do not consistently timestamp messages. They typically recreate the 
+# logfile with each new server invocation, so the "ready" message will 
+# apply to the current run if the server PID is active at that time.
+#
+# Returns 1 if server is up, 0 if failure
+#
+######
+# Take as inputs the environment variables:
+#
+# SERVER_PID_FILE
+#            pointer to the process ID of the running server (from 
+#            the ($SERVER_PID_FILE_NAME|server.pid) file or equivalent).
+# SLOGNAME   name of the server logfile, e.g. "RemoteServices". Note: this
+#            differs from is_server_up() in that this is the complete
+#            logfile name, since no PID or date is added to the name.
+# LOGDIR     directory where the logfiles are found
+# SERVER_UP  log message that indicates that the server is alive
+# SCONTEXT   server directory context (if any), "NULL" if none
+#
+# The quick-and-dirty way to see if the server is up is to issue a
+# "kill -0 pid" against it. The following is a bit more robust in that
+# it checks the server log file to see if the server made it all the
+# way to the "listening for connections" stage, or equivalent.
+#
+# Returns 1 if server is up, 0 if failure
+#
+######
+
+  if [ "$SCONTEXT" != "NULL" ];
+  then
+    CHKLOG="$SCONTEXT_$SLOGNAME.log"
+  else
+    CHKLOG="$SLOGNAME.log"
+  fi
+#
+# Let the server come up to speed, then retry checking the log
+# a few times before deciding the server didn't make it up.
+# The numbers in RETRY_SERIES are sleep times (in seconds) before retry.
+#
+  MATCH=
+  for st in $RETRY_SERIES
+  do
+    sleep $st
+#echo do grep
+    $GREP "$SERVER_UP" "$LOGDIR/$CHKLOG" > /dev/null 2>&1
+    if [ "$?" -eq 0 ];
+    then
+    {
+#echo
+#echo
+#echo grep match
+#echo SERVER_UP is "$SERVER_UP"
+#echo LOG is "$LOGDIR/$CHKLOG"
+
+      if [ -f $SERVER_PID_FILE ]; # got a PID file?
+      then
+      {
+        pid=`cat $SERVER_PID_FILE`
+        kill -0 $pid >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+          return 1;  # PID is active
+        else
+          return 0;  # PID not active
+        fi
+      }
+      else # can't access PID file
+        continue; # try again
+      fi
+    }
+    fi
+  done
+#
+# Fell out of the loop; assume that either the logfile doesn't exist
+# or the desired string wasn't there. In either case, the server must
+# not be up.
+
+  return 0;
+}
+
+is_atypical2_server_up()
+{
+#
+# special case for the SAS Analytics Platform Server, possibly others
+#
+# SAS servers typically write log information into a server-related
+# subdirectory, using logfile names that have the date encoded in them,
+# and rotate to a new logfile each day.
+#
+# In its default configuration, this server acts like parts of both the
+# typical server and the atypical server cases: it does timestamp log messages,
+# but writes to a statically-named log file, appending messages with each
+# new run, and purging the log contents when it exceeds a size limit.
+# 
+# This routine scans the named log file, looking for associated "UP"
+# messages, then verifies that the message occurred after this script was
+# started, meaning that it came from the new run instigated by this script's
+# "start" routine. 
+#
+# Returns 1 if server is up, 0 if failure
+#
+######
+# Takes as inputs the environment variables:
+#
+# SERVER_PID_FILE
+#            pointer to the process ID of the running server (from 
+#            the ($SERVER_PID_FILE_NAME|server.pid) file).
+# SLOGNAME   name of the server logfile, e.g. "AnalyticsPlatform". Note: this
+#            differs from is_server_up() in that this is the complete
+#            logfile name, since no PID or date is added to the name.
+# LOGDIR     directory where the logfiles are found
+# SERVER_UP  log message that indicates that the server is alive
+# SCONTEXT   server directory context (if any), "NULL" if none
+#
+# The quick-and-dirty way to see if the server is up is to issue a
+# "kill -0 pid" against it. The following is a bit more robust in that
+# it checks the server log file to see if the server made it all the
+# way to the "listening for connections" stage, or equivalent.
+#
+# Returns 1 if server is up, 0 if failure
+#
+######
+
+#echo scripttime $SCRIPT_TIME
+#echo logname $SLOGNAME
+#echo context $SCONTEXT
+
+  if [ "$SCONTEXT" != "NULL" ];
+  then
+    CHKLOG="$SCONTEXT_$SLOGNAME.log"
+  else
+    CHKLOG="$SLOGNAME.log"
+  fi
+#
+# First, wait for the server to create a ($SERVER_PID_FILE_NAME|server.pid)
+# file. If that doesn't happen, we can short-circuit the whole log 
+# check because the server didn't make it up.
+
+  MATCH=
+  for st in $RETRY_SERIES
+  do
+    sleep $st
+    if [ -f $SERVER_PID_FILE ];
+    then
+    {
+#echo Got server PID file
+      MATCH=yes
+      break;
+    }
+    fi
+  done
+  if [ -z "$MATCH" ];
+  then
+  {
+#echo No server PID file, giving up
+    return 0;  # never found a PID file, so server isn't running
+  }
+  fi
+
+  SERVER_PID=`cat $SERVER_PID_FILE`
+
+#echo "server PID is" $SERVER_PID
+#echo "logfile name is" $CHKLOG
+
+#
+# Let the server come up to speed, then retry checking the log
+# for the "I'm up" message a few times before deciding the server 
+# didn't make it up. The numbers in RETRY_SERIES are sleep times (in seconds) 
+# before retry.
+#
+  MATCH=
+  for st in $RETRY_SERIES
+  do
+    sleep $st
+#echo do grep
+    $GREP "$SERVER_UP" "$LOGDIR/$CHKLOG" > /dev/null 2>&1
+    if [ "$?" -eq 0 ];
+    then
+    {
+#echo
+#echo
+#echo grep match
+#echo SERVER_UP is "$SERVER_UP"
+#echo LOG is "$LOGDIR/$CHKLOG"
+
+#
+# In some instances the last log line isn't terminated with
+# a newline. Some OS tail commands will combine this with the last line that 
+# did have a newline, for example if you execute 
+#    cat foo | tail -n 1
+#
+# To fix this, there is an embedded awk in the pipe to add newlines
+#
+      MATCH=`$GREP "$SERVER_UP" "$LOGDIR/$CHKLOG" | awk '{ printf "%s\n", $0 }' | ${TAIL}1`;
+#echo checking $MATCH
+
+#
+# Check that the message occured after the start time of this script to
+# avoid any preexisting runs in an appending log file.
+#
+      check_match; 
+      if [ "$?" -eq 1 ];
+      then return 1;  # found a matching entry and it's newer than this run
+      fi
+    }
+    fi
+  done
+#
+# If we got here, we must not have found the Up message, or any found were
+# timestamped before this script's run time. Server is apparently not up.
+#
+  return 0;
+}
+
+check_match ()
+{
+#
+# If MATCH is non-null, we found the target string in the log file.
+# Now make sure that it was logged *after* we started this script (there
+# could be pre-existing successful starts since the logs get appended to).
+#
+# Passed in environment:
+#   $MATCH contains the line found in the logfile via grep.
+#   $SCRIPT_TIME contains the date string from when this script was invoked, 
+#       using the explicit "date" format string: 
+#               +%Y%m%d%H%M%S
+#
+# The timestamp anchoring the $MATCH log line is formatted as:
+#
+#    YYYY-MM-DDTHH:MM:SS
+#
+# where the "T" is the actual character "T" dividing the time portion from
+# the date portion of the string, or is a single space.
+#
+# Returns 0 on failure (too old), 1 on success
+#
+  MATCH_TIME="`echo $MATCH | awk '{ printf "%s%s%s%s%s%s",substr($1,1,4),substr($1,6,2),substr($1,9,2),substr($1,12,2),substr($1,15,2),substr($1,18,2) }'`"
+
+
+#echo Match is "$MATCH_TIME"
+#echo ScriptTime is "$SCRIPT_TIME"
+
+  if [ $SCRIPT_TIME -le $MATCH_TIME ];
+  then
+    return 1; # Good match
+  else
+    return 0; # Bad match
+  fi
+}
+
+new_day_match ()
+{
+#
+# There is a very slight possibility that the date
+# rolled over between the time that the boot script started and the
+# time that the server created the log file. See if the day changed.
+# If so, reset the logfile pointer and check one final time.
+#
+# Passed in environment:
+#   $SLOGNAME is the server log name prefix
+#   $LOGDIR is the directory where the log files are found.
+#   $SERVER_UP is the pattern used by grep to search the log file.
+#   $SCRIPT_TIME contains the date string from when this script was invoked.
+#   $SERVER_PID is the process ID of the running SAS server to test.
+#   $SHOSTNAME  short form of the machine's hostname
+#   $SCONTEXT   server directory context (if any), "NULL" if none
+#
+# Returns 0 on match failure, 1 on success
+#
+  CURDAY=`date +%d`
+  SCRIPT_DAY="`echo $SCRIPT_TIME | awk '{ printf substr($1,7,2) }'`"
+
+  if [ "$SCRIPT_DAY" != "$CURDAY" ]; # day must have rolled over
+  then
+  {
+#
+# We know that the server is up when we reach this point, we're simply
+# rechecking the log file which rolled over to a new name based on
+# the new date. The server's PID will not have cahnged.
+#
+    CHKLOG="`echo $SLOGNAME $SCRIPT_TIME $CUR_DAY $SHOSTNAME $SERVER_PID | awk '{ printf "%s_%s-%s-%s_%s_%s.log", $1, substr($2,1,4),substr($2,5,2), $3, $4, $5 }'`"
+    if [ "$SCONTEXT" != "NULL" ];
+    then
+      CHKLOG="${SCONTEXT}_${CHKLOG}"
+    fi
+
+#echo Curday CHKLOG is "$CHKLOG"
+
+    if [ -r "$LOGDIR/$CHKLOG" ]; # does a new log file exist?
+    then
+    {
+      MATCH=`$GREP "$SERVER_UP" "$LOGDIR/$CHKLOG"`;
+      #
+      # Find any "server up" indication?
+      #
+      if [ -z "$MATCH" ];
+        then return 0;  # No. 
+        else return 1;  # Yes, by definition, this instance is newer than
+      fi                #   the boot script run time, so server is up.
+    }
+    else
+      return 0; # No such log file
+    fi
+  }
+  fi
+
+  return 0; # Day didn't roll over
+}
+
+start_metadata_server()
+{
+#
+# Start SAS Metadata Server
+#
+#echo Start metadata
+  if [ -x "$METADATA_SERVER_DIR/MetadataServer.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$METADATA_SERVER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+       pid=`cat "$METADATA_SERVER_DIR/$SERVER_PID_FILE_NAME"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+#echo do metadata script
+    "$METADATA_SERVER_DIR/MetadataServer.sh" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ]; 
+      then return 1;
+    fi
+#echo do logname
+    SLOGNAME="MetadataServer"
+    LOGDIR="$METADATA_SERVER_LOGS"
+    SERVER_UP="$METADATA_SERVER_UP"
+    SERVER_PID_FILE="$METADATA_SERVER_DIR/$SERVER_PID_FILE_NAME"
+    SCONTEXT="$METADATA_SERVER_CONTEXT"
+
+#echo calling is_up
+    is_server_up;
+    if [ "$?" -eq 1 ]; 
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+start_olap_server()
+{
+  if [ -x "$OLAP_SERVER_DIR/OLAPServer.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$OLAP_SERVER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+       pid=`cat "$OLAP_SERVER_DIR/$SERVER_PID_FILE_NAME"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$OLAP_SERVER_DIR/OLAPServer.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ]; 
+      then return 1;
+    fi
+    SLOGNAME="OLAPServer"
+    LOGDIR="$OLAP_SERVER_LOGS"
+    SERVER_UP="$OLAP_SERVER_UP"
+    SERVER_PID_FILE="$OLAP_SERVER_DIR/$SERVER_PID_FILE_NAME"
+    SCONTEXT="$OLAP_SERVER_CONTEXT"
+
+    is_server_up;
+    if [ "$?" -eq 1 ]; 
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+start_fed_server()
+{
+  if [ -x "$FEDERATION_SERVER_DIR/bin/dfsadmin.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$FEDERATION_SERVER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+       pid=`cat "$FEDERATION_SERVER_DIR/$SERVER_PID_FILE_NAME"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$FEDERATION_SERVER_DIR/bin/dfsadmin.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ]; 
+      then return 1;
+    fi
+    SLOGNAME="dfs"
+    LOGDIR="$FEDERATION_SERVER_LOGS"
+    SERVER_UP="$FEDERATION_SERVER_UP"
+    SERVER_PID_FILE="$FEDERATION_SERVER_DIR/$SERVER_PID_FILE_NAME"
+    SCONTEXT="$FEDERATION_SERVER_CONTEXT"
+
+    is_server_up;
+    if [ "$?" -eq 1 ]; 
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+start_object_spawner()
+{
+  if [ -x "$OBJECT_SPAWNER_DIR/ObjectSpawner.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$OBJECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+       pid=`cat "$OBJECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$OBJECT_SPAWNER_DIR/ObjectSpawner.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ]; 
+      then return 1;
+    fi
+    SLOGNAME="ObjectSpawner"
+    LOGDIR="$OBJECT_SPAWNER_LOGS"
+    SERVER_UP="$OBJECT_SPAWNER_UP"
+    SERVER_PID_FILE="$OBJECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME"
+    SCONTEXT="$OBJECT_SPAWNER_CONTEXT"
+
+    is_server_up;
+    if [ "$?" -eq 1 ]; 
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1; # can't execute the server script
+}
+
+start_share_server()
+{
+  if [ -x "$SHARE_SERVER_DIR/ShareServer.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$SHARE_SERVER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+       pid=`cat "$SHARE_SERVER_DIR/$SERVER_PID_FILE_NAME"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$SHARE_SERVER_DIR/ShareServer.sh" $STARTCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_app_dispatch()
+{
+  if [ -x "$APP_DISPATCH_DIR/AppServer.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$APP_DISPATCH_DIR/server.pid" ];
+    then
+    {
+       pid=`cat "$APP_DISPATCH_DIR/server.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$APP_DISPATCH_DIR/AppServer.sh" $STARTCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_table_server()
+{
+  if [ -x "$TABLE_SERVER_DIR/TableServer.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$TABLE_SERVER_DIR/server.pid" ];
+    then
+    {
+       pid=`cat "$TABLE_SERVER_DIR/server.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$TABLE_SERVER_DIR/TableServer.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ]; 
+      then return 1;
+    fi
+    SLOGNAME="TableServer"
+    LOGDIR="$TABLE_SERVER_LOGS"
+    SERVER_UP="$TABLE_SERVER_UP"
+    SERVER_PID_FILE="$TABLE_SERVER_DIR/server.pid"
+    SCONTEXT="$TABLE_SERVER_CONTEXT"
+
+    is_server_up;
+    if [ "$?" -eq 1 ]; 
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+start_framedata_server()
+{
+  if [ -x "$FRAMEDATA_SERVER_DIR/dffedsvrcfg.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$FRAMEDATA_SERVER_DIR/server.pid" ];
+    then
+    {
+       pid=`cat "$FRAMEDATA_SERVER_DIR/server.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$FRAMEDATA_SERVER_DIR/dffedsvrcfg.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ]; 
+      then return 1;
+    fi
+    SLOGNAME="FrameworkServer"
+    LOGDIR="$FRAMEDATA_SERVER_LOGS"
+    SERVER_UP="$FRAMEDATA_SERVER_UP"
+    SERVER_PID_FILE="$FRAMEDATA_SERVER_DIR/server.pid"
+    SCONTEXT="$FRAMEDATA_SERVER_CONTEXT"
+
+    is_server_up;
+    if [ "$?" -eq 1 ]; 
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+#
+#
+# DIP Job Runner behaves differently than the other SAS server. It logs
+# messages to a plainly-named log file. None of this matters
+# because the logfile is recreated with each new run of DIP Job Runner, so
+# we can simply check for the "ready" message after the PID becomes active.
+#
+start_dip_jobrunner()
+{
+  if [ -x "$DIP_JOBRUNNER_DIR/DIPJobRunner.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$DIP_JOBRUNNER_DIR/server.pid" ];
+    then
+    {
+       pid=`cat "$DIP_JOBRUNNER_DIR/server.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$DIP_JOBRUNNER_DIR/DIPJobRunner.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+    SLOGNAME="DIPJobRunnerService"
+    LOGDIR="$DIP_JOBRUNNER_LOGS"
+    SERVER_UP="$DIP_JOBRUNNER_UP"
+    SERVER_PID_FILE="$DIP_JOBRUNNER_DIR/server.pid"
+    SCONTEXT="$DIP_JOBRUNNER_CONTEXT"
+
+    is_atypical_server_up;
+    if [ "$?" -eq 1 ];
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+#
+#
+# Remote Services behaves differently than the other SAS server. It logs
+# messages to a plainly-named log file, uses different timestamps on messages,
+# and doesn't timestamp it's "ready" message at all. None of this matters
+# because the logfile is recreated with each new run of Remote Services, so
+# we can simply check for the "ready" message after the PID becomes active.
+#
+start_remote_services()
+{
+  if [ -x "$REMOTE_SERVICES_DIR/RemoteServices.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$REMOTE_SERVICES_DIR/server.pid" ];
+    then
+    {
+       pid=`cat "$REMOTE_SERVICES_DIR/server.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$REMOTE_SERVICES_DIR/RemoteServices.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ]; 
+      then return 1;
+    fi
+    SLOGNAME="RemoteServices_console"
+    LOGDIR="$REMOTE_SERVICES_LOGS"
+    SERVER_UP="$REMOTE_SERVICES_UP"
+    SERVER_PID_FILE="$REMOTE_SERVICES_DIR/server.pid"
+    SCONTEXT="$REMOTE_SEVICES_CONTEXT"
+
+    is_atypical_server_up;
+    if [ "$?" -eq 1 ]; 
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+#
+#
+# Merchandise Intelligence Grid Server behaves differently than the other 
+# SAS server. It logs messages to a plainly-named log file, uses different 
+# timestamps on messages, and doesn't timestamp it's "ready" message at all. 
+# None of this matters because the logfile is recreated with each new run 
+# of Merchandise Intelligence Grid Server, so
+# we can simply check for the "ready" message after the PID becomes active.
+#
+start_merch_intel_grid_server()
+{
+  if [ -x "$MERCH_INTEL_GRID_DIR/server.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$MERCH_INTEL_GRID_DIR/server.pid" ];
+    then
+    {
+       pid=`cat "$MERCH_INTEL_GRID_DIR_DIR/server.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$MERCH_INTEL_GRID_DIR/server.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ]; 
+      then return 1;
+    fi
+    SLOGNAME="MerchIntelGridSvr_console"
+    LOGDIR="$MERCH_INTEL_GRID_LOGS"
+    SERVER_UP="$MERCH_INTEL_GRID_UP"
+    SERVER_PID_FILE="$MERCH_INTEL_GRID_DIR/server.pid"
+    SCONTEXT="$MERCH_INTEL_GRID_CONTEXT"
+
+    is_atypical_server_up;
+    if [ "$?" -eq 1 ]; 
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+#
+# As of SAS 9.4, CONNECT now behaves like typical IOM servers with a
+# rolling log file, named in the typical format. Formerly, CONNECT wrote
+# to a statically-named log file recreated with each new run.
+#
+start_connect_spawner()
+{
+  if [ -x "$CONNECT_SPAWNER_DIR/ConnectSpawner.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$CONNECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+       pid=`cat "$CONNECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$CONNECT_SPAWNER_DIR/ConnectSpawner.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+    SLOGNAME="ConnectSpawner"
+    LOGDIR="$CONNECT_SPAWNER_LOGS"
+    SERVER_UP="$CONNECT_SPAWNER_UP"
+    SERVER_PID_FILE="$CONNECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME"
+    SCONTEXT="$CONNECT_SPAWNER_CONTEXT"
+
+    is_server_up;
+    if [ "$?" -eq 1 ];
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+#
+# Deployment Tester Server behaves differently than the other SAS servers. 
+# It writes to a statically-named log file. The logfile is recreated with 
+# each new run of the tester, so assume that if the pid is active, and the 
+# "UP" message is in the log, then the server is really up.
+#
+start_deployment_testsrv()
+{
+  if [ -x "$DEPLOYMENT_TESTSRV_DIR/DeploymentTesterServer.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$DEPLOYMENT_TESTSRV_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+       pid=`cat "$DEPLOYMENT_TESTSRV_DIR/$SERVER_PID_FILE_NAME"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$DEPLOYMENT_TESTSRV_DIR/DeploymentTesterServer.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+    SLOGNAME="DeploymentTesterServer_${SHOSTNAME}"
+    LOGDIR="$DEPLOYMENT_TESTSRV_LOGS"
+    SERVER_UP="$DEPTEST_SERVER_UP"
+    SERVER_PID_FILE="$DEPLOYMENT_TESTSRV_DIR/$SERVER_PID_FILE_NAME"
+    SCONTEXT="$DEPLOYMENT_TESTSRV_CONTEXT"
+
+    is_atypical_server_up;
+    if [ "$?" -eq 1 ];
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+#
+# Analytics Platform Server behaves differently than the other SAS servers. 
+# It writes to a statically-named log file. The logfile is appended-to with 
+# each new run of the server, up to a set file size limit, whereupon the 
+# log is purged. The server writes timestamped messages to the log, so look
+# for an "UP" message in the log that occurs after this script is started
+# to confirm that the server is really up.
+#
+start_analytics_platform()
+{
+  if [ -x "$ANALYTICS_PLATFORM_DIR/AnalyticsPlatform.sh" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$ANALYTICS_PLATFORM_DIR/server.pid" ];
+    then
+    {
+       pid=`cat "$ANALYTICS_PLATFORM_DIR/server.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          return 0
+       fi
+    }
+    fi
+
+    "$ANALYTICS_PLATFORM_DIR/AnalyticsPlatform.sh" $STARTCMD >/dev/null 2>&1
+    if [ "$?" -ne 0 ]; 
+      then return 1;
+    fi
+    SLOGNAME="AnalyticsPlatform"
+    LOGDIR="$ANALYTICS_PLATFORM_LOGS"
+    SERVER_UP="$ANALYTICS_PLATFORM_UP"
+    SERVER_PID_FILE="$ANALYTICS_PLATFORM_DIR/server.pid"
+    SCONTEXT="$ANALYTICS_PLATFORM_CONTEXT"
+
+    is_atypical2_server_up;
+    if [ "$?" -eq 1 ]; 
+      then return 0;  # Yes
+      else return 1;  # No
+    fi
+  }
+  fi
+  return 1;
+}
+
+stop_metadata_server()
+{
+  if [ -x "$METADATA_SERVER_DIR/MetadataServer.sh" ];
+  then
+  {
+    "$METADATA_SERVER_DIR/MetadataServer.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_olap_server()
+{
+  if [ -x "$OLAP_SERVER_DIR/OLAPServer.sh" ];
+  then
+  {
+    "$OLAP_SERVER_DIR/OLAPServer.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_fed_server()
+{
+  if [ -x "$FEDERATION_SERVER_DIR/bin/dfsadmin.sh" ];
+  then
+  {
+    "$FEDERATION_SERVER_DIR/bin/dfsadmin.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_object_spawner()
+{
+  if [ -x "$OBJECT_SPAWNER_DIR/ObjectSpawner.sh" ];
+  then
+  {
+    "$OBJECT_SPAWNER_DIR/ObjectSpawner.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_share_server()
+{
+  if [ -x "$SHARE_SERVER_DIR/ShareServer.sh" ];
+  then
+  {
+    "$SHARE_SERVER_DIR/ShareServer.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_table_server()
+{
+  if [ -x "$TABLE_SERVER_DIR/TableServer.sh" ];
+  then
+  {
+    "$TABLE_SERVER_DIR/TableServer.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_framedata_server()
+{
+  if [ -x "$FRAMEDATA_SERVER_DIR/dffedsvrcfg.sh" ];
+  then
+  {
+    "$FRAMEDATA_SERVER_DIR/dffedsvrcfg.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_dip_jobrunner()
+{
+  if [ -x "$DIP_JOBRUNNER_DIR/DIPJobRunner.sh" ];
+  then
+  {
+    "$DIP_JOBRUNNER_DIR/DIPJobRunner.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_remote_services()
+{
+  if [ -x "$REMOTE_SERVICES_DIR/RemoteServices.sh" ];
+  then
+  {
+    "$REMOTE_SERVICES_DIR/RemoteServices.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_merch_intel_grid_server()
+{
+  if [ -x "$MERCH_INTEL_GRID_DIR/server.sh" ];
+  then
+  {
+    "$MERCH_INTEL_GRID_DIR/server.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_app_dispatch()
+{
+  if [ -x "$APP_DISPATCH_DIR/AppServer.sh" ];
+  then
+  {
+    "$APP_DISPATCH_DIR/AppServer.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_connect_spawner()
+{
+  if [ -f "$CONNECT_SPAWNER_DIR/$SERVER_PID_FILE_NAME" ];
+  then
+  {
+    "$CONNECT_SPAWNER_DIR/ConnectSpawner.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_deployment_testsrv()
+{
+  if [ -f "$DEPLOYMENT_TESTSRV_DIR/$SERVER_PID_FILE_NAME" ];
+  then
+  {
+    "$DEPLOYMENT_TESTSRV_DIR/DeploymentTesterServer.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_analytics_platform()
+{
+  if [ -x "$ANALYTICS_PLATFORM_DIR/AnalyticsPlatform.sh" ];
+  then
+  {
+    "$ANALYTICS_PLATFORM_DIR/AnalyticsPlatform.sh" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+

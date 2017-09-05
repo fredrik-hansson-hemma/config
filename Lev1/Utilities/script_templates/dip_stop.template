@@ -1,0 +1,7 @@
+DIP_JOBRUNNER_DIR=
+DIP_JOBRUNNER_LOGS=
+
+  if [ -x "$DIP_JOBRUNNER_DIR/DIPJobRunner.sh" ];
+  then stop_dip_jobrunner; fi;
+
+

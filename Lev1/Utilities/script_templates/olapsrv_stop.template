@@ -1,0 +1,7 @@
+OLAP_SERVER_DIR=
+OLAP_SERVER_LOGS=
+
+  if [ -x "$OLAP_SERVER_DIR/OLAPServer.sh" ];
+  then stop_olap_server; fi;
+
+

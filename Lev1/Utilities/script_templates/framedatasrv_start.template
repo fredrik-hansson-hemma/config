@@ -1,0 +1,20 @@
+FRAMEDATA_SERVER_DIR=
+FRAMEDATA_SERVER_LOGS=
+FRAMEDATA_SERVER_CONTEXT=
+
+  if [ -x "$FRAMEDATA_SERVER_DIR/dffedsvrcfg.sh" ]
+  then
+  {
+    start_framedata_server;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASFRAMEDATASRV_INSTANCE_IS_UP";
+    else $Logmsg "$SASFRAMEDATASRV_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASFRAMEDATASRV_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASFRAMEDATASRV_INSTANCE_IS_DOWN"
+  }
+  fi
+

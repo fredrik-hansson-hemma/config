@@ -1,0 +1,7 @@
+SHARE_SERVER_DIR=
+SHARE_SERVER_LOGS=
+
+  if [ -x "$SHARE_SERVER_DIR/ShareServer.sh" ];
+  then stop_share_server; fi;
+
+

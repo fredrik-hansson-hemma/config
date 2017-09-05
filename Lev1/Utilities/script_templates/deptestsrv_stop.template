@@ -1,0 +1,7 @@
+DEPLOYMENT_TESTSRV_DIR=
+DEPLOYMENT_TESTSRV_LOGS=
+
+  if [ -x "$DEPLOYMENT_TESTSRV_DIR/DeploymentTesterServer.sh" ];
+  then stop_deployment_testsrv; fi;
+
+

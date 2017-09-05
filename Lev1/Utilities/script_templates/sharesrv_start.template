@@ -1,0 +1,20 @@
+SHARE_SERVER_DIR=
+SHARE_SERVER_LOGS=
+SHARE_SERVER_CONTEXT=
+
+  if [ -x "$SHARE_SERVER_DIR/ShareServer.sh" ]
+  then
+  {
+    start_share_server;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASSHARE_INSTANCE_IS_UP";
+    else $Logmsg "$SASSHARE_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASSHARE_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASSHARE_INSTANCE_IS_DOWN"
+  }
+  fi
+

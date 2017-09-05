@@ -1,0 +1,20 @@
+TABLE_SERVER_DIR=
+TABLE_SERVER_LOGS=
+TABLE_SERVER_CONTEXT=
+
+  if [ -x "$TABLE_SERVER_DIR/TableServer.sh" ]
+  then
+  {
+    start_table_server;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASTABLE_INSTANCE_IS_UP";
+    else $Logmsg "$SASTABLE_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASTABLE_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASTABLE_INSTANCE_IS_DOWN"
+  }
+  fi
+

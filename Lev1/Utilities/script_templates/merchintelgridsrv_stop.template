@@ -1,0 +1,7 @@
+MERCH_INTEL_GRID_DIR=
+MERCH_INTEL_GRID_LOGS=
+
+  if [ -x "$MERCH_INTEL_GRID_DIR/server.sh" ];
+  then stop_merch_intel_grid_server; fi;
+
+

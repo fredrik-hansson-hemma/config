@@ -1,0 +1,39 @@
+35
+# ObjectSpawner.srv - SAS Object Spawner boot script configuration
+#                      (generated file)
+#
+# This file is used by the gen_server.sh script to create a SAS servers
+# control script which allows all SAS servers to be started/stopped, either
+# manually or at system boot, sequencing the local server instances and
+# verifying that they have actually started.
+#
+# Note: invalid data, extraneous leading or trailing whitespace or newlines, 
+# extra lines of data, or other anomalies in this file will cause the 
+# start/boot script generator to fail. Be very careful if you edit this by hand.
+#
+# Format:
+#  Line1: line offset into this file for the config data; this offset
+#         exists so that changes to, or native-language translations of 
+#         these header comments can be accommodated.
+#
+#  Line2 to offset-1: comments, ignored
+#
+#  offset: ENABLE/DISABLE  DISABLE will cause this server instance to be
+#          ignored for purposes of the start/boot script. Remaining lines
+#          in this file will be ignored.
+#
+#  offset+1: this file format version, used to accommodate changes in
+#            script generation and as an additional format sanity check.
+#
+#  offset+2: path to SAS server control script, server.pid is assumed
+#            to live at this same directory
+#
+#  offset+3: path to SAS server log files, may differ from above
+#
+#  offset+4: server context if needed, or "NULL"
+#
+ENABLE
+1
+/opt/sas/config/Lev1/ObjectSpawner
+/opt/sas/config/Lev1/ObjectSpawner/Logs
+NULL

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- NOTE: This format is subject to change without notice! -->
+
+<!-- Describes formatters used to adapt the results of this product's -->
+<!-- tests to a format usable by Deployment Tester.                   -->
+
+<Formatters version="1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="http://www.sas.com/xml/schema/dpro/formatters-1.5.xsd">
+
+</Formatters>

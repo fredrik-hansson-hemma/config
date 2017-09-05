@@ -1,0 +1,17 @@
+DIP_JOBRUNNER_DIR=
+
+    if [ -f "$DIP_JOBRUNNER_DIR/server.pid" ];
+    then
+    {
+      pid=`cat "$DIP_JOBRUNNER_DIR/server.pid"`
+      kill -0 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         $Logmsg "$SASDIP_INSTANCE_IS_UP"
+      else
+         $Logmsg "$SASDIP_INSTANCE_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$SASDIP_INSTANCE_IS_DOWN"
+    fi
+

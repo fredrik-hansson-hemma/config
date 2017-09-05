@@ -1,0 +1,54 @@
+IRSS_SERVER_DIR=
+PID_FILE="$IRSS_SERVER_DIR/work/information-retrieval-studio-server.pid"
+IS_UP="false"
+
+  if [ -r "$PID_FILE" ];
+  then
+  {
+    pid=`cat "$PID_FILE"`
+    kill -0 $pid >/dev/null 2>&1
+
+    if [ "$?" -eq 0 ];
+    then
+    {
+      $Logmsg "$SASIRSS_ALREADY_UP"
+      IS_UP="true"
+    }
+    fi
+  }
+  fi
+
+  if [ "$IS_UP" = "false" ];
+  then
+  {
+    if [ -x "$IRSS_SERVER_DIR/IRStudio.sh" ];
+    then
+    {
+      "$IRSS_SERVER_DIR/IRStudio.sh" start >/dev/null 2>&1
+
+# see if it succeeded in starting
+      if [ -r "$PID_FILE" ];
+      then
+      {
+        pid=`cat "$PID_FILE"`
+        kill -0 $pid >/dev/null 2>&1
+
+        if [ "$?" -eq 0 ]; then
+          $Logmsg "$SASIRSS_IS_UP"
+        else
+          $Logmsg "$SASIRSS_IS_DOWN"
+        fi
+      }
+      else
+        $Logmsg "$SASIRSS_IS_DOWN"
+      fi
+
+    }
+    else
+    {
+      $Logmsg "$SASIRSS_SCRIPT_ACCESS"
+    }
+    fi
+  }
+  fi
+

@@ -1,0 +1,920 @@
+#!/bin/sh
+#
+# sas.servers.mid - start/stop script for SAS mid-tier servers
+# This script is typically invoked by the main Lev1/sas.servers script, but
+# can be configured to be invoked directly instead.
+#
+#
+#
+# The following symbols will be preset by generate_boot_scripts.sh
+#
+LEVELDIR=
+SCRIPTDIR=
+SERVERUSER=
+
+#*****
+# Commands passed to the server control scripts
+#*****
+STARTCMD=
+STOPCMD=
+RESTARTCMD=
+STATUSCMD=
+
+OSTYPE=
+
+SHOSTNAMEUNX=`hostname`
+SHOSTNAMEZOS=`uname -n`
+
+ACTIVEMQ_DIR="$LEVELDIR/Web/activemq"
+ACTIVEMQ_CMD="$ACTIVEMQ_DIR/bin/activemq"
+
+SASWEBAPPSRV_DIR="$LEVELDIR/Web/WebAppServer"
+# possible multiple server instances so command is rooted off of a subdir of SASWEBAPPSRV_DIR
+SASWEBAPPSRV_CMD="bin/tcruntime-ctl.sh"
+
+GEMFIRE_DIR="$LEVELDIR/Web/gemfire/instances"
+# possible multiple server instances so command is rooted off of a subdir of GEMFIRE_DIR
+GEMFIRE_CMD="gemfire-locator.sh"
+
+SASWEBSRV_DIR="$LEVELDIR/Web/WebServer"
+SASWEBSRV_CMD="$SASWEBSRV_DIR/bin/httpdctl"
+
+SASENVMGRSRV_DIR="$LEVELDIR/Web/SASEnvironmentManager/server-5.8.0-EE"
+SASENVMGRSRV_CMD="$SASENVMGRSRV_DIR/bin/hq-server.sh"
+
+SASENVMGRAGNT_DIR="$LEVELDIR/Web/SASEnvironmentManager/agent-5.8.0-EE"
+if [ "$OSTYPE" = "aix" ];
+then
+  SASENVMGRAGNT_CMD="$SASENVMGRAGNT_DIR/bundles/agent-5.8.0/bin/hq-agent-nowrapper.sh"
+else
+  SASENVMGRAGNT_CMD="$SASENVMGRAGNT_DIR/bin/hq-agent.sh"
+fi
+
+
+start_activemq()
+{
+#echo 'start_activemq()'
+  if [ -x "$ACTIVEMQ_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ "$OSTYPE" = "zos" ];
+    then
+      PIDFILE="$ACTIVEMQ_DIR/data/activemq-${SHOSTNAMEZOS}.pid"
+    else
+      PIDFILE="$ACTIVEMQ_DIR/data/activemq-${SHOSTNAMEUNX}.pid"
+    fi
+
+    if [ -r "$PIDFILE" ];
+    then
+    {
+       pid=`cat "$PIDFILE"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS JMS Broker is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do activemq script
+    echo "Starting SAS JMS Broker"
+    "$ACTIVEMQ_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    else
+      return 0;
+    fi
+  }
+  fi
+#echo No executable activemq script
+  return 1;  # script is not reachable/executable
+}
+
+stop_activemq()
+{
+  if [ -x "$ACTIVEMQ_CMD" ];
+  then
+  {
+    echo "Stopping SAS JMS Broker"
+    "$ACTIVEMQ_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_saswebappsrv_instance()
+{
+#
+# Instance name is passed in as shell variable SASWEBAPPINSTANCE
+#
+
+#echo 'start_saswebappsrv_instance()'
+#echo SASWEBAPPINSTANCE is $SASWEBAPPINSTANCE
+
+  if [ -x "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/$SASWEBAPPSRV_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/logs/tcserver.pid" ];
+    then
+    {
+       pid=`cat "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/logs/tcserver.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Web App Server $SASWEBAPPINSTANCE is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do saswebappsrv script
+    if [ -r "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/logs/server.log" ];
+    then
+    {
+      MYMARK=`cat $SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/logs/server.log | wc -l`
+      # Sun version of wc adds leading blanks to its output, the expr processing will ignore them.
+      # MYMARK points at the last line, which could be the old "Server startup" message, so add one to skip it.
+
+      MYMARK=`expr $MYMARK + 1`
+
+      # Second size tag to watch for a log roll-over. This is faster than
+      # the above "wc" invocation
+      ROLLMARK=`ls -l $SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/logs/server.log`
+      # clear leading blanks, then strip the trailing filename
+      ROLLMARK=`echo $ROLLMARK | tr -s ' ' | cut -d ' ' -f 5`
+    }
+    else
+    {
+      MYMARK=1
+      ROLLMARK=0
+    }
+    fi
+#
+# note: MYMARK is in lines, ROLLMARK is in bytes (different uses)
+#
+#echo MYMARK is $MYMARK
+#echo ROLLMARK is $ROLLMARK
+
+    echo "Starting SAS Web App Server: $SASWEBAPPINSTANCE"
+    echo "(this can take a while)"
+    "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/$SASWEBAPPSRV_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+    then
+      return 1;
+    else
+    {
+#
+# Probe the log file to see if the server is actually ready yet.
+#
+RETRY_SERIES="30 30 30 30 60 60 60 60 60 60 60 60 60 60 60 60 60 120 120 120 120 120 120"
+MATCH=
+
+      for st in $RETRY_SERIES
+      do
+#
+# Verify that the log hasn't rolled to a new instance
+#
+        ROLLCHK=`ls -l $SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/logs/server.log`
+        # clear leading blanks, then strip trailing filename
+        ROLLCHK=`echo $ROLLCHK | tr -s ' ' | cut -d ' ' -f 5`
+
+        if [ $ROLLCHK -lt $ROLLMARK ];
+        then
+        {
+          echo "Note: $SASWEBAPPINSTANCE server.log rolled over during startup."
+          MYMARK=1
+        }
+        fi
+
+        #track along with the filesize; if it shrinks as above, it rolled again.
+        ROLLMARK=$ROLLCHK
+
+#echo MYMARK is $MYMARK
+#echo ROLLMARK is $ROLLMARK
+
+#
+# Starting at the lower bound of line $MYMARK, check for server ready message
+#
+        $TAIL +${MYMARK} $SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/logs/server.log | $GREP "Server startup in .* ms" >/dev/null 2>&1 ;
+        if [ "$?" -eq 0 ];
+        then
+        {
+          MATCH=yes
+          break;
+        }
+        else
+        {
+          echo "waiting $st ..."
+          sleep $st;
+        }
+        fi
+      done
+
+      if [ -z "$MATCH" ];
+      then
+      {
+        echo "SAS Web App Server $SASWEBAPPINSTANCE is still in the process of starting up,"
+        echo "proceeding with additional servers."
+        return 1;
+      }
+      fi
+      return 0;
+    }  # Probe
+    fi
+  }
+  fi
+#echo No executable saswebappsrv script
+  return 1;  # script is not reachable/executable
+}
+
+start_saswebappsrv()
+{
+  if [ ! -z "$SASWEBAPPLIST" ]
+  then
+  {
+    for SASWEBAPPINSTANCE in $SASWEBAPPLIST;
+    do
+      start_saswebappsrv_instance;
+    done
+  }
+  fi
+}
+
+
+stop_saswebappsrv_instance()
+{
+#
+# Instance name is passed in as shell variable SASWEBAPPINSTANCE
+#
+
+#echo 'stop_saswebappsrv_instance()'
+#echo SASWEBAPPINSTANCE is $SASWEBAPPINSTANCE
+
+  if [ -x "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/$SASWEBAPPSRV_CMD" ];
+  then
+  {
+    echo "Stopping SAS Web App Server: $SASWEBAPPINSTANCE"
+    "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/$SASWEBAPPSRV_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_saswebappsrv()
+{
+  if [ ! -z "$SASWEBAPPLIST_R" ]
+  then
+  {
+    for SASWEBAPPINSTANCE in $SASWEBAPPLIST_R;
+    do
+      stop_saswebappsrv_instance;
+    done
+  }
+  fi
+}
+
+
+start_gemfire_instance()
+{
+#
+# Instance name is passed in as shell variable GEMFIREINSTANCE
+#
+
+#echo 'start_gemfire_instance()'
+#echo GEMFIREINSTANCE is $GEMFIREINSTANCE
+
+  if [ -x "$GEMFIRE_DIR/$GEMFIREINSTANCE/$GEMFIRE_CMD" ];
+  then
+  {
+
+# if a server is already up, short-circuit this process
+
+    CMDSTAT=`$GEMFIRE_DIR/$GEMFIREINSTANCE/$GEMFIRE_CMD status`
+    if [ "$CMDSTAT" = "running" ];
+    then
+    {
+      # Server is already running
+      echo "SAS Cache Locator Service $GEMFIREINSTANCE is already UP"
+      return 0
+    }
+    fi
+
+    echo "Starting SAS Cache Locator Service: $GEMFIREINSTANCE"
+    "$GEMFIRE_DIR/$GEMFIREINSTANCE/$GEMFIRE_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+    then
+      return 1;
+    else
+    {
+#
+# Probe the service to see if the server is actually ready yet.
+#
+RETRY_SERIES="30 30 30 30 60 60 60 60 60 60 60 60 60 60 60 60 60 120 120 120"
+MATCH=
+
+      for st in $RETRY_SERIES
+      do
+      {
+        CMDSTAT=`$GEMFIRE_DIR/$GEMFIREINSTANCE/$GEMFIRE_CMD status`
+        if [ "$CMDSTAT" = "running" ];
+        then
+        {
+          MATCH=yes
+          break;
+        }
+        else
+        {
+          echo "waiting $st ..."
+          sleep $st;
+        }
+        fi
+      }
+      done
+
+      if [ -z "$MATCH" ];
+      then
+      {
+        echo "SAS Cache Locator Service $GEMFIREINSTANCE is still in the process of starting up,"
+        echo "proceeding with additional servers."
+        return 1;
+      }
+      fi
+      return 0;
+    }  # Probe
+    fi
+  }
+  fi
+#echo No executable gemfire script
+  return 1;  # script is not reachable/executable
+}
+
+start_gemfire()
+{
+  if [ ! -z "$GEMFIRELIST" ]
+  then
+  {
+    for GEMFIREINSTANCE in $GEMFIRELIST;
+    do
+      start_gemfire_instance;
+    done
+  }
+  fi
+}
+
+
+stop_gemfire_instance()
+{
+#
+# Instance name is passed in as shell variable GEMFIREINSTANCE
+#
+
+#echo 'stop_gemfire_instance()'
+#echo GEMFIREINSTANCE is $GEMFIREINSTANCE
+
+  if [ -x "$GEMFIRE_DIR/$GEMFIREINSTANCE/$GEMFIRE_CMD" ];
+  then
+  {
+    echo "Stopping SAS Cache Locator Service: $GEMFIREINSTANCE"
+    "$GEMFIRE_DIR/$GEMFIREINSTANCE/$GEMFIRE_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+stop_gemfire()
+{
+  if [ ! -z "$GEMFIRELIST" ]
+  then
+  {
+    for GEMFIREINSTANCE in $GEMFIRELIST_R;
+    do
+      stop_gemfire_instance;
+    done
+  }
+  fi
+}
+
+
+start_saswebsrv()
+{
+#echo 'start_saswebsrv()'
+  if [ -x "$SASWEBSRV_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$SASWEBSRV_DIR/logs/httpd.pid" ];
+    then
+    {
+       pid=`cat "$SASWEBSRV_DIR/logs/httpd.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Web Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do saswebsrv script
+    echo "Starting SAS Web Server"
+    "$SASWEBSRV_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    else
+      return 0;
+    fi
+  }
+  fi
+#echo No executable saswebsrv script
+  return 1;  # script is not reachable/executable
+}
+
+stop_saswebsrv()
+{
+  if [ -x "$SASWEBSRV_CMD" ];
+  then
+  {
+    echo "Stopping SAS Web Server"
+    "$SASWEBSRV_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_sasenvmgrsrv()
+{
+#echo 'start_sasenvmgrsrv()'
+  if [ -x "$SASENVMGRSRV_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$SASENVMGRSRV_DIR/wrapper/hq-server.pid" ];
+    then
+    {
+       pid=`cat "$SASENVMGRSRV_DIR/wrapper/hq-server.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Environment Manager is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do sasenvmgrsrv script
+    echo "Starting SAS Environment Manager"
+    "$SASENVMGRSRV_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    else
+      return 0;
+    fi
+  }
+  fi
+#echo No executable sasenvmgrsrv script
+  return 1;  # script is not reachable/executable
+}
+
+stop_sasenvmgrsrv()
+{
+  if [ -x "$SASENVMGRSRV_CMD" ];
+  then
+  {
+    echo "Stopping SAS Environment Manager"
+    "$SASENVMGRSRV_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_sasenvmgragnt()
+{
+#echo 'start_sasenvmgragnt()'
+  if [ -x "$SASENVMGRAGNT_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$SASENVMGRAGNT_DIR/wrapper/hq-agent.pid" ];
+    then
+    {
+       pid=`cat "$SASENVMGRAGNT_DIR/wrapper/hq-agent.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Environment Manager Agent is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do sasenvmgragnt script
+    echo "Starting SAS Environment Manager Agent"
+    "$SASENVMGRAGNT_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    else
+      return 0;
+    fi
+  }
+  fi
+#echo No executable sasenvmgragnt script
+  return 1;  # script is not reachable/executable
+}
+
+stop_sasenvmgragnt()
+{
+  if [ -x "$SASENVMGRAGNT_CMD" ];
+  then
+  {
+    echo "Stopping SAS Environment Manager Agent"
+    "$SASENVMGRAGNT_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_servers()
+{
+  start_activemq;
+  start_gemfire;
+  start_saswebsrv;
+  start_saswebappsrv;
+  start_sasenvmgrsrv;
+  start_sasenvmgragnt;
+  return 0;
+}
+
+stop_servers()
+{
+  stop_sasenvmgragnt;
+  stop_sasenvmgrsrv;
+  stop_saswebappsrv;
+  stop_saswebsrv;
+  stop_gemfire;
+  stop_activemq;
+  return 0;
+}
+
+server_status()
+{
+# SAS JMS Broker
+  if [ -x "$ACTIVEMQ_CMD" ];
+  then
+  {
+    if [ "$OSTYPE" = "zos" ];
+    then
+      PIDFILE="$ACTIVEMQ_DIR/data/activemq-${SHOSTNAMEZOS}.pid"
+    else
+      PIDFILE="$ACTIVEMQ_DIR/data/activemq-${SHOSTNAMEUNX}.pid"
+    fi
+
+    if [ -r "$PIDFILE" ];
+    then
+    {
+       pid=`cat "$PIDFILE"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS JMS Broker is UP"
+       else
+          echo "SAS JMS Broker is NOT up"
+       fi
+    }
+    else
+      echo "SAS JMS Broker is NOT up"
+    fi
+  } 
+  fi
+
+# SAS Cache Locator Service
+    if [ ! -z "$GEMFIRELIST" ]
+    then
+    {
+      for GEMFIREINSTANCE in $GEMFIRELIST;
+      do
+      {
+        if [ -x "$GEMFIRE_DIR/$GEMFIREINSTANCE/$GEMFIRE_CMD" ];
+        then
+        {
+           CMDSTAT=`$GEMFIRE_DIR/$GEMFIREINSTANCE/$GEMFIRE_CMD status`
+           if [ "$CMDSTAT" = "running" ];
+           then
+              # Server is already running
+              echo "SAS Cache Locator Service $GEMFIREINSTANCE is UP"
+           else
+              echo "SAS Cache Locator Service $GEMFIREINSTANCE is NOT up"
+           fi
+        }
+        else
+          echo "SAS Cache Locator Service $GEMFIREINSTANCE could not be checked"
+        fi
+      }
+      done
+    }
+    fi
+
+# SAS Web Server
+  if [ -x "$SASWEBSRV_CMD" ];
+  then
+  {
+    if [ -r "$SASWEBSRV_DIR/logs/httpd.pid" ];
+    then
+    {
+       pid=`cat "$SASWEBSRV_DIR/logs/httpd.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Web Server is UP"
+       else
+          echo "SAS Web Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Web Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Web App Server
+    if [ ! -z "$SASWEBAPPLIST" ]
+    then
+    {
+      for SASWEBAPPINSTANCE in $SASWEBAPPLIST;
+      do
+      {
+        if [ -x "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/$SASWEBAPPSRV_CMD" ];
+        then
+        {
+          if [ -r "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/logs/tcserver.pid" ];
+          then
+          {
+            pid=`cat "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/logs/tcserver.pid"`
+            kill -0 $pid > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+              # Server is already running
+              echo "SAS Web App Server $SASWEBAPPINSTANCE is UP"
+            else
+              echo "SAS Web App Server $SASWEBAPPINSTANCE is NOT up"
+            fi
+          }  # if PID
+          else
+            echo "SAS Web App Server $SASWEBAPPINSTANCE is NOT up"
+          fi
+        }  # if CMD
+        else
+          echo "SAS Web App Server $SASWEBAPPINSTANCE could not be checked"
+        fi
+      }
+      done
+    }
+    fi
+
+# SAS Environment Manager Server
+  if [ -x "$SASENVMGRSRV_CMD" ];
+  then
+  {
+    if [ -r "$SASENVMGRSRV_DIR/wrapper/hq-server.pid" ];
+    then
+    {
+       pid=`cat "$SASENVMGRSRV_DIR/wrapper/hq-server.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Environment Manager is UP"
+       else
+          echo "SAS Environment Manager is NOT up"
+       fi
+    }
+    else
+      echo "SAS Environment Manager is NOT up"
+    fi
+  }
+  fi
+
+# SAS Environment Manager Agent
+  if [ -x "$SASENVMGRAGNT_CMD" ];
+  then
+  {
+    if [ -r "$SASENVMGRAGNT_DIR/wrapper/hq-agent.pid" ];
+    then
+    {
+       pid=`cat "$SASENVMGRAGNT_DIR/wrapper/hq-agent.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Environment Manager Agent is UP"
+       else
+          echo "SAS Environment Manager Agent is NOT up"
+       fi
+    }
+    else
+      echo "SAS Environment Manager Agent is NOT up"
+    fi
+  }
+  fi
+
+  return 0;
+}
+
+#
+# Main processing routine
+#
+
+# Set up for platform-specific command paths
+
+case "$OSTYPE" in
+
+  rhel | sles)
+    WHOAMI="/usr/bin/whoami"
+    TAIL="/usr/bin/tail -n "  # trailing space is significant
+    GREP="grep -a"            # force systems to treat Unicode "binary" files as text
+    ;;
+
+  aix | hpux)
+    WHOAMI="/usr/bin/whoami"
+    TAIL="/usr/bin/tail -n "  # trailing space is significant
+    GREP="grep"
+    ;;
+
+  sun)
+    WHOAMI="/usr/ucb/whoami"
+    TAIL="/usr/xpg4/bin/tail -n " # trailing space is significant
+    GREP="grep"
+    ;;
+
+  zos)
+    WHOAMI="/bin/whoami"
+    TAIL="/bin/tail -n "  # trailing space is significant
+    GREP="grep"
+    ;;
+
+  *)
+    echo $0: "Couldn't determine the OS type for processing. OSTYPE=$OSTYPE"
+    echo "Giving up..."
+    echo
+    exit 1
+    ;;
+esac
+
+# To avoid protection issues for installs mounted over NFS, rerun
+# ourselves as the UID that owns the installed SAS code.
+#
+#echo UID is `$WHOAMI`
+
+if [ `$WHOAMI` != "$SERVERUSER" ];
+then
+{
+#echo Invoking su $SERVERUSER -c $0 $1
+
+  su "$SERVERUSER" -c "$0 $1"
+  exit $?
+}
+fi
+
+#
+# build list of available local SAS Web App Servers
+#
+TMPLIST=""
+
+if [ -x "$SASWEBAPPSRV_DIR" ];
+then
+{
+  TMPLIST=`cd $SASWEBAPPSRV_DIR; /bin/echo *`
+  if [ "$TMPLIST" = "*" ]; then TMPLIST=""; fi
+}
+fi
+
+#
+# TMPLIST contains list of tcServer instance directories in collating order
+#
+SASWEBAPPLIST=""
+SASWEBAPPLIST_R=""
+
+if [ ! -z "$TMPLIST" ];
+then
+{  # build sorted list, forcing SASServer1_1 (if any) to front
+  for SASWEBAPPINSTANCE in $TMPLIST;
+  do
+  {
+    # only add instance if it contains the appserver cmd script
+    # this avoids other non-appserver content in the directory (S1195223, S1186345)
+    if [ -x "$SASWEBAPPSRV_DIR/$SASWEBAPPINSTANCE/$SASWEBAPPSRV_CMD" ];
+    then
+    {
+      # special-case: force SASServer1_1 to front
+      if [ "$SASWEBAPPINSTANCE" = "SASServer1_1" ];
+      then
+      {
+        SASWEBAPPLIST="SASServer1_1 $SASWEBAPPLIST"
+        SASWEBAPPLIST_R="$SASWEBAPPLIST_R SASServer1_1"
+      }
+      else
+      {
+        SASWEBAPPLIST="$SASWEBAPPLIST $SASWEBAPPINSTANCE"
+        SASWEBAPPLIST_R="$SASWEBAPPINSTANCE $SASWEBAPPLIST_R"
+      }
+      fi
+    }
+    fi
+  }
+  done
+}
+fi 
+
+  
+#echo SASWEBAPPLIST is $SASWEBAPPLIST
+#echo SASWEBAPPLIST_R is $SASWEBAPPLIST_R
+
+#
+# build list of available local SAS Cache Locator service instances
+#
+GEMFIRELIST=""
+
+if [ -x "$GEMFIRE_DIR" ];
+then
+{
+  GEMFIRELIST=`cd $GEMFIRE_DIR; /bin/echo *`
+  if [ "$GEMFIRELIST" = "*" ]; then GEMFIRELIST=""; fi
+}
+fi
+
+#
+# GEMFIRELIST contains list of GemFire instance directories in collating order
+#
+GEMFIRELIST_R=""
+
+if [ ! -z "$GEMFIRELIST" ];
+then
+{  # build reverse sorted list
+  for GEMFIREINSTANCE in $GEMFIRELIST;
+  do
+  {
+    GEMFIRELIST_R="$GEMFIREINSTANCE $GEMFIRELIST_R"
+  }
+  done
+}
+fi 
+
+  
+#echo GEMFIRELIST is $GEMFIRELIST
+#echo GEMFIRELIST_R is $GEMFIRELIST_R
+
+case "$1" in
+  start)
+    start_servers;
+    exit $?
+    ;;
+
+  stop)
+    stop_servers;
+    ;;
+
+  restart|reload)
+    stop_servers;
+    sleep 15;           # let everything quiesce
+    start_servers;
+    exit $?
+    ;;
+
+  status)
+    server_status;
+    exit $?
+    ;;
+
+  *)
+    echo "Usage $0 {$STARTCMD|$STOPCMD|$RESTARTCMD|$STATUSCMD}"
+    exit 1;
+
+esac
+

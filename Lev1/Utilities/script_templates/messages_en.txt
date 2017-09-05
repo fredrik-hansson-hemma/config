@@ -1,0 +1,316 @@
+#
+# This file is included by the generate_boot_scripts.sh shell file to
+# preset output strings for script messages. The following quoted strings
+# can be translated to other languages. They will be output exactly
+# as defined, using the Unix "echo" command. No concatenation or variable
+# substitutions will be applied to the strings. They must fully-state
+# the required message content. As such, there is some use of redundant
+# messages, differing only in an embedded count (1, 2, 3, etc.). These
+# values may be translated to their word-equivalent if needed (1=One, etc.)
+#
+# The English version of this file is used as a default fallback for missing
+# versions of message files for other locales. 
+#
+
+#
+# The following strings are compared against contents of the server
+# log files. Those strings that begin with "SAH...." should not be 
+# translated - they represent coded forms of the equivalent message. The
+# non-coded strings should exactly match the string or string fragment
+# output to the log by each SAS BI server type.
+#
+METADATA_SERVER_UP="SAH011999I"
+OLAP_SERVER_UP="SAH051999I"
+OBJECT_SPAWNER_UP="SAH021999I"
+TABLE_SERVER_UP="SAH061999I"
+CONNECT_SPAWNER_UP="SAH201999I"
+DIP_JOBRUNNER_UP="SAH061999I"
+FEDERATION_SERVER_UP="SAH061999I"
+#
+REMOTE_SERVICES_UP="Services are deployed and running."
+DEPTEST_SERVER_UP="Deployment Tester Server ready"
+ANALYTICS_PLATFORM_UP="Analytics Platform - started"
+FRAMEDATA_SERVER_UP="Framework Data Server has completed initialization"
+MERCH_INTEL_GRID_UP="Merchandise Intelligence Server is ready to take requests"
+
+#
+# The following constant controls how many discrete instances of
+# a given SAS EBI server type are allowed to be installed on the same
+# machine in the same configuration path (lev_root). If this number is
+# increased, additional copies of the following messages will need to
+# be added both here as messages, and as additional cases in the 
+# related sas.servers *.template files.
+#
+MAX_INSTANCES=5
+
+#
+# This section contains messages output by the sas.servers script 
+# *.template fragments.
+#
+# Note the phrase "is UP" used below has the meaning
+# of "is functioning" or "is executing".
+#
+# The phrase "is NOT up" used below has the meaning
+# if "is NOT functioning" or "is NOT executing".
+#
+# The usage of "UP" and "NOT up" to indicate state is consistent with 
+# system boot scripts in the UNIX and Linux environments.
+#
+
+# SAS Analytics Platform Server
+APS1_IS_UP="SAS Analytics Platform Server 1 is UP"
+APS2_IS_UP="SAS Analytics Platform Server Two is UP"
+APS3_IS_UP="SAS Analytics Platform Server Three is UP"
+APS4_IS_UP="SAS Analytics Platform Server Four is UP"
+APS5_IS_UP="SAS Analytics Platform Server Five is UP"
+
+APS1_IS_DOWN="SAS Analytics Platform Server 1 is NOT up"
+APS2_IS_DOWN="SAS Analytics Platform Server Two is NOT up"
+APS3_IS_DOWN="SAS Analytics Platform Server Three is NOT up"
+APS4_IS_DOWN="SAS Analytics Platform Server Four is NOT up"
+APS5_IS_DOWN="SAS Analytics Platform Server Five is NOT up"
+
+APS1_SCRIPT_ACCESS="Could not access SAS Analytics Platform Server 1 script"
+APS2_SCRIPT_ACCESS="Could not access SAS Analytics Platform Server Two script"
+APS3_SCRIPT_ACCESS="Could not access SAS Analytics Platform Server Three script"
+APS4_SCRIPT_ACCESS="Could not access SAS Analytics Platform Server Four script"
+APS5_SCRIPT_ACCESS="Could not access SAS Analytics Platform Server Five script"
+
+# SAS CONNECT Spawner
+SASCONN1_IS_UP="SAS CONNECT Spawner 1 is UP"
+SASCONN2_IS_UP="SAS CONNECT Spawner Two is UP"
+SASCONN3_IS_UP="SAS CONNECT Spawner Three is UP"
+SASCONN4_IS_UP="SAS CONNECT Spawner Four is UP"
+SASCONN5_IS_UP="SAS CONNECT Spawner Five is UP"
+
+SASCONN1_IS_DOWN="SAS CONNECT Spawner 1 is NOT up"
+SASCONN2_IS_DOWN="SAS CONNECT Spawner Two is NOT up"
+SASCONN3_IS_DOWN="SAS CONNECT Spawner Three is NOT up"
+SASCONN4_IS_DOWN="SAS CONNECT Spawner Four is NOT up"
+SASCONN5_IS_DOWN="SAS CONNECT Spawner Five is NOT up"
+
+SASCONN1_SCRIPT_ACCESS="Could not access SAS CONNECT Spawner 1 script"
+SASCONN2_SCRIPT_ACCESS="Could not access SAS CONNECT Spawner Two script"
+SASCONN3_SCRIPT_ACCESS="Could not access SAS CONNECT Spawner Three script"
+SASCONN4_SCRIPT_ACCESS="Could not access SAS CONNECT Spawner Four script"
+SASCONN5_SCRIPT_ACCESS="Could not access SAS CONNECT Spawner Five script"
+
+# SAS Deployment Tester Server
+DEPTESTSRV1_IS_UP="SAS Deployment Tester Server 1 is UP"
+DEPTESTSRV2_IS_UP="SAS Deployment Tester Server Two is UP"
+DEPTESTSRV3_IS_UP="SAS Deployment Tester Server Three is UP"
+DEPTESTSRV4_IS_UP="SAS Deployment Tester Server Four is UP"
+DEPTESTSRV5_IS_UP="SAS Deployment Tester Server Five is UP"
+
+DEPTESTSRV1_IS_DOWN="SAS Deployment Tester Server 1 is NOT up"
+DEPTESTSRV2_IS_DOWN="SAS Deployment Tester Server Two is NOT up"
+DEPTESTSRV3_IS_DOWN="SAS Deployment Tester Server Three is NOT up"
+DEPTESTSRV4_IS_DOWN="SAS Deployment Tester Server Four is NOT up"
+DEPTESTSRV5_IS_DOWN="SAS Deployment Tester Server Five is NOT up"
+
+DEPTESTSRV1_SCRIPT_ACCESS="Could not access SAS Deployment Tester Server 1 script"
+DEPTESTSRV2_SCRIPT_ACCESS="Could not access SAS Deployment Tester Server Two script"
+DEPTESTSRV3_SCRIPT_ACCESS="Could not access SAS Deployment Tester Server Three script"
+DEPTESTSRV4_SCRIPT_ACCESS="Could not access SAS Deployment Tester Server Four script"
+DEPTESTSRV5_SCRIPT_ACCESS="Could not access SAS Deployment Tester Server Five script"
+
+# SAS Merchandise Intelligence Grid Server
+SASMERCHINTELGRIDSRV1_IS_UP="SAS Merchandise Intelligence Grid Server 1 is UP"
+SASMERCHINTELGRIDSRV2_IS_UP="SAS Merchandise Intelligence Grid Server 2 is UP"
+SASMERCHINTELGRIDSRV3_IS_UP="SAS Merchandise Intelligence Grid Server 3 is UP"
+SASMERCHINTELGRIDSRV4_IS_UP="SAS Merchandise Intelligence Grid Server 4 is UP"
+SASMERCHINTELGRIDSRV5_IS_UP="SAS Merchandise Intelligence Grid Server 5 is UP"
+
+SASMERCHINTELGRIDSRV1_IS_DOWN="SAS Merchandise Intelligence Grid Server 1 is NOT up"
+SASMERCHINTELGRIDSRV2_IS_DOWN="SAS Merchandise Intelligence Grid Server 2 is NOT up"
+SASMERCHINTELGRIDSRV3_IS_DOWN="SAS Merchandise Intelligence Grid Server 3 is NOT up"
+SASMERCHINTELGRIDSRV4_IS_DOWN="SAS Merchandise Intelligence Grid Server 4 is NOT up"
+SASMERCHINTELGRIDSRV5_IS_DOWN="SAS Merchandise Intelligence Grid Server 5 is NOT up"
+
+SASMERCHINTELGRIDSRV1_SCRIPT_ACCESS="Could not access SAS Merchandise Intelligence Grid Server 1 script"
+SASMERCHINTELGRIDSRV2_SCRIPT_ACCESS="Could not access SAS Merchandise Intelligence Grid Server 2 script"
+SASMERCHINTELGRIDSRV3_SCRIPT_ACCESS="Could not access SAS Merchandise Intelligence Grid Server 3 script"
+SASMERCHINTELGRIDSRV4_SCRIPT_ACCESS="Could not access SAS Merchandise Intelligence Grid Server 4 script"
+SASMERCHINTELGRIDSRV5_SCRIPT_ACCESS="Could not access SAS Merchandise Intelligence Grid Server 5 script"
+
+# SAS Metadata Server
+SASMETA_WONT_START_OTHERS="The remaining SAS servers will NOT be started as a result."
+
+SASMETA1_IS_UP="SAS Metadata Server 1 is UP"
+SASMETA2_IS_UP="SAS Metadata Server 2 is UP"
+SASMETA3_IS_UP="SAS Metadata Server 3 is UP"
+SASMETA4_IS_UP="SAS Metadata Server 4 is UP"
+SASMETA5_IS_UP="SAS Metadata Server 5 is UP"
+
+SASMETA1_IS_DOWN="SAS Metadata Server 1 is NOT up"
+SASMETA2_IS_DOWN="SAS Metadata Server 2 is NOT up"
+SASMETA3_IS_DOWN="SAS Metadata Server 3 is NOT up"
+SASMETA4_IS_DOWN="SAS Metadata Server 4 is NOT up"
+SASMETA5_IS_DOWN="SAS Metadata Server 5 is NOT up"
+
+SASMETA1_SCRIPT_ACCESS="Could not access SAS Metadata Server 1 script"
+SASMETA2_SCRIPT_ACCESS="Could not access SAS Metadata Server 2 script"
+SASMETA3_SCRIPT_ACCESS="Could not access SAS Metadata Server 3 script"
+SASMETA4_SCRIPT_ACCESS="Could not access SAS Metadata Server 4 script"
+SASMETA5_SCRIPT_ACCESS="Could not access SAS Metadata Server 5 script"
+
+# SAS Object Spawner
+SASOBJSP1_IS_UP="SAS Object Spawner 1 is UP"
+SASOBJSP2_IS_UP="SAS Object Spawner 2 is UP"
+SASOBJSP3_IS_UP="SAS Object Spawner 3 is UP"
+SASOBJSP4_IS_UP="SAS Object Spawner 4 is UP"
+SASOBJSP5_IS_UP="SAS Object Spawner 5 is UP"
+
+SASOBJSP1_IS_DOWN="SAS Object Spawner 1 is NOT up"
+SASOBJSP2_IS_DOWN="SAS Object Spawner 2 is NOT up"
+SASOBJSP3_IS_DOWN="SAS Object Spawner 3 is NOT up"
+SASOBJSP4_IS_DOWN="SAS Object Spawner 4 is NOT up"
+SASOBJSP5_IS_DOWN="SAS Object Spawner 5 is NOT up"
+
+SASOBJSP1_SCRIPT_ACCESS="Could not access SAS Object Spawner 1 script"
+SASOBJSP2_SCRIPT_ACCESS="Could not access SAS Object Spawner 2 script"
+SASOBJSP3_SCRIPT_ACCESS="Could not access SAS Object Spawner 3 script"
+SASOBJSP4_SCRIPT_ACCESS="Could not access SAS Object Spawner 4 script"
+SASOBJSP5_SCRIPT_ACCESS="Could not access SAS Object Spawner 5 script"
+
+# SAS OLAP Server
+SASOLAP1_IS_UP="SAS OLAP Server 1 is UP"
+SASOLAP2_IS_UP="SAS OLAP Server 2 is UP"
+SASOLAP3_IS_UP="SAS OLAP Server 3 is UP"
+SASOLAP4_IS_UP="SAS OLAP Server 4 is UP"
+SASOLAP5_IS_UP="SAS OLAP Server 5 is UP"
+
+SASOLAP1_IS_DOWN="SAS OLAP Server 1 is NOT up"
+SASOLAP2_IS_DOWN="SAS OLAP Server 2 is NOT up"
+SASOLAP3_IS_DOWN="SAS OLAP Server 3 is NOT up"
+SASOLAP4_IS_DOWN="SAS OLAP Server 4 is NOT up"
+SASOLAP5_IS_DOWN="SAS OLAP Server 5 is NOT up"
+
+SASOLAP1_SCRIPT_ACCESS="Could not access SAS OLAP Server 1 script"
+SASOLAP2_SCRIPT_ACCESS="Could not access SAS OLAP Server 2 script"
+SASOLAP3_SCRIPT_ACCESS="Could not access SAS OLAP Server 3 script"
+SASOLAP4_SCRIPT_ACCESS="Could not access SAS OLAP Server 4 script"
+SASOLAP5_SCRIPT_ACCESS="Could not access SAS OLAP Server 5 script"
+
+# SAS Federation Server (only one instance)
+SASFEDSRV_IS_UP="SAS Federation Server is UP"
+SASFEDSRV_IS_DOWN="SAS Federation Server is NOT up"
+SASFEDSRV_SCRIPT_ACCESS="Could not access SAS Federation Server script"
+
+# SAS DIP JobRunner
+SASDIP1_IS_UP="SAS DIP Job Runner 1 is UP"
+SASDIP2_IS_UP="SAS DIP Job Runner 2 is UP"
+SASDIP3_IS_UP="SAS DIP Job Runner 3 is UP"
+SASDIP4_IS_UP="SAS DIP Job Runner 4 is UP"
+SASDIP5_IS_UP="SAS DIP Job Runner 5 is UP"
+
+SASDIP1_IS_DOWN="SAS DIP Job Runner 1 is NOT up"
+SASDIP2_IS_DOWN="SAS DIP Job Runner 2 is NOT up"
+SASDIP3_IS_DOWN="SAS DIP Job Runner 3 is NOT up"
+SASDIP4_IS_DOWN="SAS DIP Job Runner 4 is NOT up"
+SASDIP5_IS_DOWN="SAS DIP Job Runner 5 is NOT up"
+
+SASDIP1_SCRIPT_ACCESS="Could not access SAS DIP Job Runner 1 script"
+SASDIP2_SCRIPT_ACCESS="Could not access SAS DIP Job Runner 2 script"
+SASDIP3_SCRIPT_ACCESS="Could not access SAS DIP Job Runner 3 script"
+SASDIP4_SCRIPT_ACCESS="Could not access SAS DIP Job Runner 4 script"
+SASDIP5_SCRIPT_ACCESS="Could not access SAS DIP Job Runner 5 script"
+
+# SAS Remote Services
+SASREMSRV1_IS_UP="SAS Remote Services 1 is UP"
+SASREMSRV2_IS_UP="SAS Remote Services 2 is UP"
+SASREMSRV3_IS_UP="SAS Remote Services 3 is UP"
+SASREMSRV4_IS_UP="SAS Remote Services 4 is UP"
+SASREMSRV5_IS_UP="SAS Remote Services 5 is UP"
+
+SASREMSRV1_IS_DOWN="SAS Remote Services 1 is NOT up"
+SASREMSRV2_IS_DOWN="SAS Remote Services 2 is NOT up"
+SASREMSRV3_IS_DOWN="SAS Remote Services 3 is NOT up"
+SASREMSRV4_IS_DOWN="SAS Remote Services 4 is NOT up"
+SASREMSRV5_IS_DOWN="SAS Remote Services 5 is NOT up"
+
+SASREMSRV1_SCRIPT_ACCESS="Could not access SAS Remote Services 1 script"
+SASREMSRV2_SCRIPT_ACCESS="Could not access SAS Remote Services 2 script"
+SASREMSRV3_SCRIPT_ACCESS="Could not access SAS Remote Services 3 script"
+SASREMSRV4_SCRIPT_ACCESS="Could not access SAS Remote Services 4 script"
+SASREMSRV5_SCRIPT_ACCESS="Could not access SAS Remote Services 5 script"
+
+# SAS Share Server
+SASSHARE1_IS_UP="SAS Share Server 1 is UP"
+SASSHARE2_IS_UP="SAS Share Server 2 is UP"
+SASSHARE3_IS_UP="SAS Share Server 3 is UP"
+SASSHARE4_IS_UP="SAS Share Server 4 is UP"
+SASSHARE5_IS_UP="SAS Share Server 5 is UP"
+
+SASSHARE1_IS_DOWN="SAS Share Server 1 is NOT up"
+SASSHARE2_IS_DOWN="SAS Share Server 2 is NOT up"
+SASSHARE3_IS_DOWN="SAS Share Server 3 is NOT up"
+SASSHARE4_IS_DOWN="SAS Share Server 4 is NOT up"
+SASSHARE5_IS_DOWN="SAS Share Server 5 is NOT up"
+
+SASSHARE1_SCRIPT_ACCESS="Could not access SAS Share Server 1 script"
+SASSHARE2_SCRIPT_ACCESS="Could not access SAS Share Server 2 script"
+SASSHARE3_SCRIPT_ACCESS="Could not access SAS Share Server 3 script"
+SASSHARE4_SCRIPT_ACCESS="Could not access SAS Share Server 4 script"
+SASSHARE5_SCRIPT_ACCESS="Could not access SAS Share Server 5 script"
+
+# SAS Table Server
+SASTABLE1_IS_UP="SAS Table Server 1 is UP"
+SASTABLE2_IS_UP="SAS Table Server 2 is UP"
+SASTABLE3_IS_UP="SAS Table Server 3 is UP"
+SASTABLE4_IS_UP="SAS Table Server 4 is UP"
+SASTABLE5_IS_UP="SAS Table Server 5 is UP"
+
+SASTABLE1_IS_DOWN="SAS Table Server 1 is NOT up"
+SASTABLE2_IS_DOWN="SAS Table Server 2 is NOT up"
+SASTABLE3_IS_DOWN="SAS Table Server 3 is NOT up"
+SASTABLE4_IS_DOWN="SAS Table Server 4 is NOT up"
+SASTABLE5_IS_DOWN="SAS Table Server 5 is NOT up"
+
+SASTABLE1_SCRIPT_ACCESS="Could not access SAS Table Server 1 script"
+SASTABLE2_SCRIPT_ACCESS="Could not access SAS Table Server 2 script"
+SASTABLE3_SCRIPT_ACCESS="Could not access SAS Table Server 3 script"
+SASTABLE4_SCRIPT_ACCESS="Could not access SAS Table Server 4 script"
+SASTABLE5_SCRIPT_ACCESS="Could not access SAS Table Server 5 script"
+
+# SAS Framework Data Server
+SASFRAMEDATASRV1_IS_UP="SAS Framework Data Server 1 is UP"
+SASFRAMEDATASRV2_IS_UP="SAS Framework Data Server 2 is UP"
+SASFRAMEDATASRV3_IS_UP="SAS Framework Data Server 3 is UP"
+SASFRAMEDATASRV4_IS_UP="SAS Framework Data Server 4 is UP"
+SASFRAMEDATASRV5_IS_UP="SAS Framework Data Server 5 is UP"
+
+SASFRAMEDATASRV1_IS_DOWN="SAS Framework Data Server 1 is NOT up"
+SASFRAMEDATASRV2_IS_DOWN="SAS Framework Data Server 2 is NOT up"
+SASFRAMEDATASRV3_IS_DOWN="SAS Framework Data Server 3 is NOT up"
+SASFRAMEDATASRV4_IS_DOWN="SAS Framework Data Server 4 is NOT up"
+SASFRAMEDATASRV5_IS_DOWN="SAS Framework Data Server 5 is NOT up"
+
+SASFRAMEDATASRV1_SCRIPT_ACCESS="Could not access SAS Framework Data Server 1 script"
+SASFRAMEDATASRV2_SCRIPT_ACCESS="Could not access SAS Framework Data Server 2 script"
+SASFRAMEDATASRV3_SCRIPT_ACCESS="Could not access SAS Framework Data Server 3 script"
+SASFRAMEDATASRV4_SCRIPT_ACCESS="Could not access SAS Framework Data Server 4 script"
+SASFRAMEDATASRV5_SCRIPT_ACCESS="Could not access SAS Framework Data Server 5 script"
+
+# SAS Information Retrieval Studio Server (only one instance)
+
+SASIRSS_IS_STARTING="Starting SAS Information Retrieval Studio Server"
+SASIRSS_IS_STOPPING="Stopping SAS Information Retrieval Studio Server"
+SASIRSS_SCRIPT_ACCESS="Could not access SAS Information Retrieval Studio Server script"
+SASIRSS_IS_DOWN="SAS Information Retrieval Studio Server is NOT up"
+SASIRSS_IS_UP="SAS Information Retrieval Studio Server is UP"
+SASIRSS_ALREADY_UP="SAS Information Retrieval Studio Server is already UP"
+
+#
+# Miscellaneous script messages.
+#
+
+SASSRV_START="Starting SAS servers"
+SASSRV_STATUS="SAS servers status:"
+SASSRV_STOP="Stopping SAS servers"
+
+#
+# End of English message definitions
+#
+
+

@@ -1,0 +1,17 @@
+DEPLOYMENT_TESTSRV_DIR=
+
+    if [ -f "$DEPLOYMENT_TESTSRV_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+      pid=`cat "$DEPLOYMENT_TESTSRV_DIR/$SERVER_PID_FILE_NAME"`
+      kill -0 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         $Logmsg "$DEPTESTSRV_INSTANCE_IS_UP"
+      else
+         $Logmsg "$DEPTESTSRV_INSTANCE_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$DEPTESTSRV_INSTANCE_IS_DOWN"
+    fi
+

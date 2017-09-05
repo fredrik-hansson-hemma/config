@@ -1,0 +1,7 @@
+FRAMEDATA_SERVER_DIR=
+FRAMEDATA_SERVER_LOGS=
+
+  if [ -x "$FRAMEDATA_SERVER_DIR/dffedsvrcfg.sh" ];
+  then stop_framedata_server; fi;
+
+

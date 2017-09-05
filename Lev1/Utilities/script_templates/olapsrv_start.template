@@ -1,0 +1,20 @@
+OLAP_SERVER_DIR=
+OLAP_SERVER_LOGS=
+OLAP_SERVER_CONTEXT=
+
+  if [ -x "$OLAP_SERVER_DIR/OLAPServer.sh" ]
+  then
+  {
+    start_olap_server;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASOLAP_INSTANCE_IS_UP";
+    else $Logmsg "$SASOLAP_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASOLAP_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASOLAP_INSTANCE_IS_DOWN"
+  }
+  fi
+

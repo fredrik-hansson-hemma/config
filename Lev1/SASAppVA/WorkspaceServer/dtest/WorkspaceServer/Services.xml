@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<!-- Describes services to add to Deployment Tester that test this product. -->
+
+<Services version="1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="http://www.sas.com/xml/schema/dpro/services-1.5.xsd">
+
+</Services>

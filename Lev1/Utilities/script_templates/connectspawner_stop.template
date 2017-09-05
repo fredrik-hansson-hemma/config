@@ -1,0 +1,7 @@
+CONNECT_SPAWNER_DIR=
+CONNECT_SPAWNER_LOGS=
+
+  if [ -x "$CONNECT_SPAWNER_DIR/ConnectSpawner.sh" ];
+  then stop_connect_spawner; fi;
+
+

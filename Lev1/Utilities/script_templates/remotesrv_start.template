@@ -1,0 +1,20 @@
+REMOTE_SERVICES_DIR=
+REMOTE_SERVICES_LOGS=
+REMOTE_SERVICES_CONTEXT=
+
+  if [ -x "$REMOTE_SERVICES_DIR/RemoteServices.sh" ]
+  then
+  {
+    start_remote_services;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASREMSRV_INSTANCE_IS_UP";
+    else $Logmsg "$SASREMSRV_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASREMSRV_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASREMSRV_INSTANCE_IS_DOWN"
+  }
+  fi
+

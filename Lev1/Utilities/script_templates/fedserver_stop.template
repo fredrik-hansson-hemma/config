@@ -1,0 +1,6 @@
+FEDERATION_SERVER_DIR=
+
+  if [ -x "$FEDERATION_SERVER_DIR/bin/dfsadmin.sh" ];
+  then stop_fed_server; fi;
+
+

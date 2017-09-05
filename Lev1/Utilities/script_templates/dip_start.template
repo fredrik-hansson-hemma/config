@@ -1,0 +1,20 @@
+DIP_JOBRUNNER_DIR=
+DIP_JOBRUNNER_LOGS=
+DIP_JOBRUNNER_CONTEXT=
+
+  if [ -x "$DIP_JOBRUNNER_DIR/DIPJobRunner.sh" ]
+  then
+  {
+    start_dip_jobrunner;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASDIP_INSTANCE_IS_UP";
+    else $Logmsg "$SASDIP_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASDIP_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASDIP_INSTANCE_IS_DOWN"
+  }
+  fi
+

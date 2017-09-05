@@ -1,0 +1,20 @@
+MERCH_INTEL_GRID_DIR=
+MERCH_INTEL_GRID_LOGS=
+MERCH_INTEL_GRID_CONTEXT=
+
+  if [ -x "$MERCH_INTEL_GRID_DIR/server.sh" ]
+  then
+  {
+    start_merch_intel_grid_server;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASMERCHINTELGRIDSRV_INSTANCE_IS_UP";
+    else $Logmsg "$SASMERCHINTELGRIDSRV_INSTANCE_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASMERCHINTELGRIDSRV_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASMERCHINTELGRIDSRV_INSTANCE_IS_DOWN"
+  }
+  fi
+

@@ -1,0 +1,1 @@
+/opt/sas/sashome/SASWebInfrastructurePlatformDataServer/9.4/bin/postgres "-D" "/opt/sas/config/Lev1/WebInfrastructurePlatformDataServer/data" "-i" "-p" "9432"

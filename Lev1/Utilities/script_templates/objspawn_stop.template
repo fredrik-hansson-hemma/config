@@ -1,0 +1,7 @@
+OBJECT_SPAWNER_DIR=
+OBJECT_SPAWNER_LOGS=
+
+  if [ -x "$OBJECT_SPAWNER_DIR/ObjectSpawner.sh" ];
+  then stop_object_spawner; fi;
+
+

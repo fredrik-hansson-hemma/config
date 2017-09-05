@@ -1,0 +1,7 @@
+TABLE_SERVER_DIR=
+TABLE_SERVER_LOGS=
+
+  if [ -x "$TABLE_SERVER_DIR/TableServer.sh" ];
+  then stop_table_server; fi;
+
+

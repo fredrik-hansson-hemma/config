@@ -1,0 +1,17 @@
+MERCH_INTEL_GRID_DIR=
+
+    if [ -f "$MERCH_INTEL_GRID_DIR/server.pid" ];
+    then
+    {
+      pid=`cat "$MERCH_INTEL_GRID_DIR/server.pid"`
+      kill -0 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         $Logmsg "$SASMERCHINTELGRIDSRV_INSTANCE_IS_UP"
+      else
+         $Logmsg "$SASMERCHINTELGRIDSRV_INSTANCE_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$SASMERCHINTELGRIDSRV_INSTANCE_IS_DOWN"
+    fi
+

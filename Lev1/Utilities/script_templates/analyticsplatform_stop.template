@@ -1,0 +1,7 @@
+ANALYTICS_PLATFORM_DIR=
+ANALYTICS_PLATFORM_LOGS=
+
+  if [ -x "$ANALYTICS_PLATFORM_DIR/AnalyticsPlatform.sh" ];
+  then stop_analytics_platform; fi;
+
+

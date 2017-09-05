@@ -1,0 +1,31 @@
+METADATA_SERVER_DIR=
+METADATA_SERVER_LOGS=
+METADATA_SERVER_CONTEXT=
+
+  if [ -x "$METADATA_SERVER_DIR/MetadataServer.sh" ];
+  then
+  {
+    start_metadata_server;
+    if [ "$?" -eq 0 ];
+      then
+      {
+        $Logmsg "$SASMETA_INSTANCE_IS_UP";
+      }
+      else
+      {
+        $Logmsg "$SASMETA_INSTANCE_IS_DOWN"
+        $Logmsg "$SASMETA_WONT_START_OTHERS"
+        return 1;
+      }
+    fi
+  }
+  else
+  {
+    $Logmsg "$SASMETA_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$SASMETA_INSTANCE_IS_DOWN"
+    $Logmsg "$SASMETA_WONT_START_OTHERS"
+    return 1;    
+  }
+  fi
+
+

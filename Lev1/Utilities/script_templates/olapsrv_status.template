@@ -1,0 +1,17 @@
+OLAP_SERVER_DIR=
+
+    if [ -f "$OLAP_SERVER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+      pid=`cat "$OLAP_SERVER_DIR/$SERVER_PID_FILE_NAME"`
+      kill -0 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         $Logmsg "$SASOLAP_INSTANCE_IS_UP"
+      else
+         $Logmsg "$SASOLAP_INSTANCE_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$SASOLAP_INSTANCE_IS_DOWN"
+    fi
+

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- This contract runs proc setinit to check for expired SAS products.   -->
+
+<!-- The caller of this contract should have set the following variables: -->
+<!--    ${contID}    - Identifier for the temporary container.            -->
+<!--    ${resultsID} - Identifier of the results to create and add to.    -->
+<!--    ${userid}    - Username to connect to the Workspace Server with.  -->
+<!--    ${password}  - Password to connect to the Workspace Server with.  -->
+
+
+<contract version="1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="http://www.sas.com/xml/schema/dpro/contract-1.5.xsd">
+
+
+<!-- Ensures that a variable is defined.                 -->
+<!-- Set ${varName} to the name of the variable to check -->
+<!-- before calling this macro.                          -->
+<macro id="checkVar">
+	<!--<set name="conditional" value="$${${varName}}"/>-->
+	<varCopy fromVar="${varName}" toVar="conditional"/>
+	<unless test="${conditional}">
+		<exit errorDescription="[ERROR]: Required contract variable not defined: &quot;\${varName}&quot;"/>
+	</unless>
+</macro>
+
+
+<main>
+
+
+   <info text="Checking for required parameters..."/>
+   <set name="varName" value="contID"/>       <callMacro macro="checkVar"/>
+   <set name="varName" value="resultsID"/>    <callMacro macro="checkVar"/>
+   <set name="varName" value="userid"/>       <callMacro macro="checkVar"/>
+   <set name="varName" value="password"/>     <callMacro macro="checkVar"/>
+
+
+   <info text="Preparing testing environment..."/>
+
+   <startResults type="tests" id="${resultsID}">
+      <reportInfo>
+         <field data="numberTests">true</field>
+         <field data="detailedInfo">true</field>
+         <field data="showTestAssocFilesOnMainPage">false</field>
+         <field data="showTestAssocFilesOnTestPages">true</field>
+         <field data="showTestCommandsOnMainPage">false</field>
+         <field data="showTestCommandsOnTestPages">false</field>
+         <field data="showTestDescsOnMainPage">false</field>
+         <field data="showTestDescsOnTestPages">false</field>
+         <field data="showTestRCsOnMainPage">false</field>
+         <field data="showTestRCsOnTestPages">false</field>
+         <field data="showTestSuiteAssocFilesOnMainPage">true</field>
+         <field data="showTestSuiteCommandOnMainPage">false</field>
+         <field data="showTestSuiteDescOnMainPage">true</field>
+         <field data="showTestSuiteStdoutOnMainPage">true</field>
+         <field data="showTestSuiteStderrOnMainPage">true</field>
+         <field data="showTestSuiteTimeOnMainPage">true</field>
+         <field data="showTestTimesOnMainPage">false</field>
+         <field data="showTestTimesOnTestPages">false</field>
+      </reportInfo>
+   </startResults>
+
+
+   <openContainer server="server-local" id="${contID}"/>
+
+
+   <info text="Running Workspace Server tests..."/>
+   <set name="logFile" value="SetinitTest_serviceLog.xml"/>
+   <WorkspaceJob container="${contID}" serviceLog="${logFile}" resultsID="wsRes"
+         host="bs-ap-04.lul.se"
+         port="8591"
+         userid="${userid}"
+         password="${password}"
+         log="ProcSetinit.log" lst="ProcSetinit.lst">
+      <sasCode>proc setinit; run;</sasCode>
+   </WorkspaceJob>
+
+
+   <info text="Formatting results..."/>
+   <Format container="${contID}" resultsCollection="${resultsID}">
+      <filesToFormat container="${contID}"/>
+      <formatType type="WorkspaceJob"/>
+      <params>
+         <param name="serviceLog">${logFile}</param>
+      </params>
+   </Format>
+
+
+   <!-- Workaround to get some extra information into results. -->
+   <addToResults id="${resultsID}">
+      <params>
+         <param name="desc">Runs proc setinit to test a Workspace Server</param>
+      </params>
+   </addToResults>
+
+
+   <info text="Ending results.."/>
+   <endResults id="${resultsID}"/>
+
+   <!-- Leave container open; caller will grab results and close it. -->
+
+</main>
+
+</contract>

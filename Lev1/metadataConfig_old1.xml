@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--   
+      Default metadata server connection profile for 
+      /opt/sas/config/Lev1
+      on bs-ap-04.lul.se
+-->
+<Redirect>
+   <LogicalServer Name="SASMeta" ClassIdentifier="0217E202-B560-11DB-AD91-001083FF6836"> 
+      <UsingComponents>
+         <ServerComponent Name="SAS Metadata Server" ClassIdentifier="0217E202-B560-11DB-AD91-001083FF6836" > 
+            <SourceConnections> 
+               <TCPIPConnection Name="SAS Metadata Server" ApplicationProtocol="Bridge" CommunicationProtocol="TCP" 
+                   HostName="bs-ap-02.lul.se" Port="8561"/>
+            </SourceConnections>
+         </ServerComponent>
+      </UsingComponents>
+   </LogicalServer>
+</Redirect>

@@ -1,0 +1,30 @@
+ANALYTICS_PLATFORM_DIR=
+ANALYTICS_PLATFORM_LOGS=
+ANALYTICS_PLATFORM_CONTEXT=
+
+  if [ -x "$ANALYTICS_PLATFORM_DIR/AnalyticsPlatform.sh" ];
+  then
+  {
+    start_analytics_platform;
+#echo back from start analytics _INSTANCE
+    if [ "$?" -eq 0 ];
+      then
+      {
+        $Logmsg "$APS_INSTANCE_IS_UP"
+      }
+      else
+      {
+        $Logmsg "$APS_INSTANCE_IS_DOWN"
+        return 1;
+      }
+    fi
+  }
+  else
+  {
+    $Logmsg "$APS_INSTANCE_SCRIPT_ACCESS"
+    $Logmsg "$APS_INSTANCE_IS_DOWN"
+    return 1;    
+  }
+  fi
+
+

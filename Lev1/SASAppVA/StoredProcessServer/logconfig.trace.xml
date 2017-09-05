@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<logging:configuration xmlns:logging="http://www.sas.com/xml/logging/1.0/" debug="true">   
+
+   <!-- Rolling log file with default rollover of midnight -->
+   <appender class="RollingFileAppender" name="TimeBasedRollingFile">
+      <param name="Append" value="false"/>
+      <param name="Unique" value="true"/>
+      <param name="ImmediateFlush" value="true"/>      
+      <rollingPolicy class="TimeBasedRollingPolicy">
+         <param name="FileNamePattern" value="/opt/sas/config/Lev1/SASAppVA/StoredProcessServer/Logs/SASAppVA_STPServer_%d_%S{hostname}_%S{pid}.log"/>
+      </rollingPolicy>
+      <layout>
+         <param name="HeaderPattern" value="Host: '%S{hostname}', OS: '%S{os_family}', Release: '%S{os_release}', SAS Version: '%S{sup_ver_long2}', Command: '%S{startup_cmd}'"/>
+         <param name="ConversionPattern" value="%d %-5p [%t] %X{Client.ID}:%u - %m"/>
+      </layout>
+   </appender>
+
+   <!-- Unix System Facility Appender, writes to unix system log -->
+   <appender class="UNXFacilityAppender" name="UnixSysLog">
+      <filter class="RepeatMatchFilter">
+      <param name="AcceptOnMatch" value="false"/>
+      </filter> 
+      <layout>
+         <param name="ConversionPattern" value="%-5p [%t] %X{Client.ID}:%u - %m"/>
+      </layout>
+   </appender>
+
+   <!-- Administration message logger -->
+   <logger name="Admin" immutability="true">
+      <level value="Info"/>
+   </logger>
+
+   <!-- Application message loggers -->
+   <logger name="App" immutability="true">
+      <level value="Info"/>
+   </logger>
+
+   <logger name="App.Program" immutability="false">
+      <level value="Fatal"/>
+   </logger>
+
+   <logger name="App.Program.Autoexec">
+      <level value="Info"/>
+   </logger>
+
+   <!-- Enable diagnostic message logger -->
+   <logger name="App.StoredProcessServer">
+      <level value="Trace" />
+   </logger>
+
+   <!-- Enable diagnostic message logger -->
+   <logger name="App.SASSTP">
+      <level value="Trace" />
+   </logger>
+
+   <!-- Audit message logger -->
+   <logger name="Audit" immutability="true">
+      <level value="Info"/>
+   </logger>
+
+   <!-- IOM protocol message logger -->
+   <logger name="IOM" immutability="true">
+      <level value="Info"/>
+   </logger>
+
+   <!-- Logging Facility logger -->
+   <logger name="Logging">
+       <level value="Error"/>
+       <appender-ref ref="UnixSysLog"/>
+   </logger>
+
+   <!-- Root logger -->
+   <root>
+      <level value="Error"/>
+      <appender-ref ref="TimeBasedRollingFile"/>
+  <!-- Caution: Do NOT edit, modify or remove the following statement.                           -->   
+   <appender-ref ref="IOMServer"/>
+   </root>
+
+   <!-- Caution: Do NOT edit or modify the configuration information below. Settings are enabled  -->
+   <!--          for the internal server execution environment.                                   -->
+   <!-- IOM Server Appender -->
+   <appender class="IOMServerAppender" name="IOMServer">
+      <param name="MaxEntries" value="10000"/>
+      <layout>
+         <param name="ConversionPattern" value="%d %-5p [%t] %X{Client.ID}:%u - %m"/>
+      </layout>
+   </appender>
+   
+   <!-- Event Appender -->
+   <appender class="IOMEventAppender" name="Events">
+      <param name="Scope" value="server"/>
+      <param name="Threshold" value="Debug"/>
+      <layout>
+         <param name="ConversionPattern" value="%d %-5p [%t] %X{Client.ID}:%u - %m"/>
+      </layout>
+   </appender>
+
+   <!-- Server Administration Message Logger -->
+   <logger name="Perf.ARM.IOM.StoredProcessServer.ServerAdministration">
+      <level value="Debug"/>
+      <appender-ref ref="Events"/>
+      </logger>
+
+</logging:configuration>

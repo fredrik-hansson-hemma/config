@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<logging:configuration xmlns:logging="http://www.sas.com/xml/logging/1.0/">
+
+   <!-- Rolling log file with default rollover of midnight -->
+   <appender class="RollingFileAppender" name="TimeBasedRollingFile">
+      <param name="Append" value="false"/>
+      <param name="Unique" value="true"/>
+      <param name="ImmediateFlush" value="true"/>      
+      <rollingPolicy class="TimeBasedRollingPolicy">
+         <param name="FileNamePattern" value="/opt/sas/config/Lev1/SASAppVA/PooledWorkspaceServer/Logs/SASAppVA_PooledWSServer_%d_%S{hostname}_%S{pid}.log"/>
+      </rollingPolicy>
+      <layout>
+         <param name="HeaderPattern" value="Host: '%S{hostname}', OS: '%S{os_family}', Release: '%S{os_release}', SAS Version: '%S{sup_ver_long2}', Command: '%S{startup_cmd}'"/>
+         <param name="ConversionPattern" value="%d %-5p [%t] %X{Client.ID}:%u - %m"/>
+      </layout>
+   </appender>
+
+   <!-- Unix System Facility Appender, writes to unix system log -->
+   <appender class="UNXFacilityAppender" name="UnixSysLog">
+      <filter class="RepeatMatchFilter">
+      <param name="AcceptOnMatch" value="false"/>
+      </filter>
+      <layout>
+         <param name="ConversionPattern" value="%-5p [%t] %X{Client.ID}:%u - %m"/>
+      </layout>
+   </appender>
+
+   <!-- Administration message logger -->
+   <logger name="Admin" additivity="false" immutability="true">
+      <level value="Info"/>
+      <appender-ref ref="UnixSysLog"/>      
+   </logger>
+
+   <!-- Application message loggers -->
+   <logger name="App" immutability="true">
+      <level value="INFO"/>
+   </logger>
+
+   <logger name="App.Program" immutability="false">
+      <level value="INFO"/>
+   </logger>
+
+   <logger name="App.Program.Autoexec">
+      <level value="Info"/>
+   </logger>
+
+   <!-- Audit message logger -->
+   <logger name="Audit" immutability="true">
+      <level value="Info"/>
+   </logger>
+
+   <!-- IOM protocol message logger -->
+   <logger name="IOM" immutability="true">
+      <level value="Info"/>
+   </logger>
+
+   <!-- Logging Facility logger -->
+   <logger name="Logging">
+       <level value="Error"/>
+       <appender-ref ref="UnixSysLog"/>
+   </logger>
+
+   <!-- Root logger -->
+   <root>
+      <level value="Error"/>
+      <appender-ref ref="TimeBasedRollingFile"/>
+   </root>
+
+</logging:configuration>

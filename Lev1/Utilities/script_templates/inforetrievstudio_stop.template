@@ -1,0 +1,16 @@
+IRSS_SERVER_DIR=
+
+# IRStudio.sh correctly handles attempts to stop an already-stopped instance,
+# so don't bother checking if server is up or down first.
+
+  if [ -x "$IRSS_SERVER_DIR/IRStudio.sh" ];
+  then
+  {
+    "$IRSS_SERVER_DIR/IRStudio.sh" stop >/dev/null 2>&1
+  }
+  else
+  {
+    $Logmsg "$SASIRSS_SCRIPT_ACCESS"
+  }
+  fi
+

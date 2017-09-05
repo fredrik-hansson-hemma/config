@@ -1,0 +1,21 @@
+  # Variables defined by generate_boot_scripts.sh - MUST BE ROOTED AT CHAR POSITION 1
+SCRIPT_PRE=
+MYPATH=
+
+  #
+  # Should we invoke the sas.servers.pre script?
+  #
+  if [ "$SCRIPT_PRE" = "YES" ];
+  then
+  {
+     if [ -x "$MYPATH/sas.servers.pre" ];
+     then
+       $MYPATH/sas.servers.pre stop
+     fi
+  }
+  fi
+
+
+}
+
+

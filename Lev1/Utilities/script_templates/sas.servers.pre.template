@@ -1,0 +1,1394 @@
+#!/bin/sh
+#
+# sas.servers.pre - start/stop script for SAS preamble servers
+# This script is typically invoked by the main Lev1/sas.servers script, but
+# can be configured to be invoked directly instead.
+#
+#
+LEVELDIR=
+SCRIPTDIR=
+SERVERUSER=
+
+OSTYPE=
+
+#*****
+# Commands passed to the server control scripts
+#*****
+STARTCMD=
+STOPCMD=
+RESTARTCMD=
+STATUSCMD=
+
+WIPDS_DIR="$LEVELDIR/WebInfrastructurePlatformDataServer"
+WIPDS_CMD="$WIPDS_DIR/webinfdsvrc.sh"
+
+FMDBSVRC_DIR="$LEVELDIR/SASFinancialManagementDatabase"
+FMDBSVRC_CMD="$FMDBSVRC_DIR/fmdbsvrc.sh"
+
+EDODBS_DIR="$LEVELDIR/SASEnergyDistributionOptimizationDatabase"
+EDODBS_CMD="$EDODBS_DIR/dstoptsvrc.sh"
+
+CLADBSVRC_DIR="$LEVELDIR/CustomerLinkAnalyticsDataServer"
+CLADBSVRC_CMD="$CLADBSVRC_DIR/cladbsvrc.sh"
+
+DDCFDBSVRC_DIR="$LEVELDIR/ForecastAnalystWorkbenchDataServer"
+DDCFDBSVRC_CMD="$DDCFDBSVRC_DIR/ddcfdbsvrc.sh"
+
+INVTOPTDSVRC_DIR="$LEVELDIR/InventoryOptimizationWorkbenchDataServer"
+INVTOPTDSVRC_CMD="$INVTOPTDSVRC_DIR/invtoptdsvrc.sh"
+
+AACDS_DIR="$LEVELDIR/AdvancedAnalyticsCommonDataServer"
+AACDS_CMD="$AACDS_DIR/aacmndbsvrc.sh"
+
+DCMCOMDSVRC_DIR="$LEVELDIR/DecisionManagerCommonDataSvr"
+DCMCOMDSVRC_CMD="$DCMCOMDSVRC_DIR/dcmcomdsvrc.sh"
+
+DMRMDTDSVRC_DIR="$LEVELDIR/DataRemediationDataServer"
+DMRMDTDSVRC_CMD="$DMRMDTDSVRC_DIR/dmrmdtdsvrc.sh"
+DMRMDTDSVRC_DATA="$DMRMDTDSVRC_DIR/data"
+if [ ! -d "$DMRMDTDSVRC_DATA" ];
+then
+  DMRMDTDSVRC_DATA="$DMRMDTDSVRC_DIR/Data"
+fi
+
+JOBMNTRDSVRC_DIR="$LEVELDIR/JobMonitorDataServer"
+JOBMNTRDSVRC_CMD="$JOBMNTRDSVRC_DIR/jobmntrdsvrc.sh"
+JOBMNTRDSVRC_DATA="$JOBMNTRDSVRC_DIR/data"
+if [ ! -d "$JOBMNTRDSVRC_DATA" ];
+then
+  JOBMNTRDSVRC_DATA="$JOBMNTRDSVRC_DIR/Data"
+fi
+
+DMDSVRC_DIR="$LEVELDIR/SASDataManagementDataServer"
+DMDSVRC_CMD="$DMDSVRC_DIR/dmdsvrc.sh"
+
+QASDS_DIR="$LEVELDIR/QualityAnalyticSuiteDataServer"
+QASDS_CMD="$QASDS_DIR/wrtydbsvrc.sh"
+
+HPRDS_DIR="$LEVELDIR/SASRiskCommonDataServer"
+HPRDS_CMD="$HPRDS_DIR/hpriskdsvrc.sh"
+
+EFDS_DIR="$LEVELDIR/EnergyForecastingDataServer"
+EFDS_CMD="$EFDS_DIR/enfcdbsvrc.sh"
+
+MRMDS_DIR="$LEVELDIR/ModelRiskManagementDataServer"
+MRMDS_CMD="$MRMDS_DIR/mrmdsvrc.sh"
+
+CAPMDS_DIR="$LEVELDIR/SASCostAndProfitabilityManagementDataServer"
+CAPMDS_CMD="$CAPMDS_DIR/abmdbsvrc.sh"
+
+CXTDS_DIR="$LEVELDIR/CustomerExperienceTargetingDataServer"
+CXTDS_CMD="$CXTDS_DIR/cxadbsvrc.sh"
+
+start_wipds()
+{
+#echo 'start_wipds()'
+  if [ -x "$WIPDS_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$WIPDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$WIPDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Web Infrastructure Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do wipds script
+    echo "Starting SAS Web Infrastructure Data Server"
+    "$WIPDS_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_wipds()
+{
+  if [ -x "$WIPDS_CMD" ];
+  then
+  {
+    echo "Stopping SAS Web Infrastructure Data Server"
+    "$WIPDS_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_fmdbsvrc()
+{
+#echo 'start_fmdbsvrc()'
+  if [ -x "$FMDBSVRC_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$FMDBSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$FMDBSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Financial Management Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do fmdbsrvrc script
+    echo "Starting SAS Financial Management Data Server"
+    "$FMDBSVRC_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_fmdbsvrc()
+{
+  if [ -x "$FMDBSVRC_CMD" ];
+  then
+  {
+    echo "Stopping SAS Financial Management Data Server"
+    "$FMDBSVRC_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_edodbs()
+{
+#echo 'start_edodbs()'
+  if [ -x "$EDODBS_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$EDODBS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$EDODBS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Energy Distribution Optimization Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do edodbs script
+    echo "Starting SAS Energy Distribution Optimization Data Server"
+    "$EDODBS_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_edodbs()
+{
+  if [ -x "$EDODBS_CMD" ];
+  then
+  {
+    echo "Stopping SAS Energy Distribution Optimization Data Server"
+    "$EDODBS_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_ddcfdbsvrc()
+{
+#echo 'start_ddcfdbsvrc()'
+  if [ -x "$DDCFDBSVRC_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$DDCFDBSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$DDCFDBSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Forecast Analyst Workbench Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do ddcfdbsvrc script
+    echo "Starting SAS Forecast Analyst Workbench Data Server"
+    "$DDCFDBSVRC_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_ddcfdbsvrc()
+{
+  if [ -x "$DDCFDBSVRC_CMD" ];
+  then
+  {
+    echo "Stopping SAS Forecast Analyst Workbench Data Server"
+    "$DDCFDBSVRC_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_invtoptdsvrc()
+{
+#echo 'start_invtoptdsvrc()'
+  if [ -x "$INVTOPTDSVRC_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$INVTOPTDSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$INVTOPTDSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Inventory Optimization Workbench Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do invtoptdsvrc script
+    echo "Starting SAS Inventory Optimization Workbench Data Server"
+    "$INVTOPTDSVRC_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_invtoptdsvrc()
+{
+  if [ -x "$INVTOPTDSVRC_CMD" ];
+  then
+  {
+    echo "Stopping SAS Inventory Optimization Workbench Data Server"
+    "$INVTOPTDSVRC_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_cladbsvrc()
+{
+#echo 'start_cladbsvrc()'
+  if [ -x "$CLADBSVRC_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$CLADBSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$CLADBSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Customer Link Analytics Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do cladbsvrc script
+    echo "Starting SAS Customer Link Analytics Data Server"
+    "$CLADBSVRC_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_cladbsvrc()
+{
+  if [ -x "$CLADBSVRC_CMD" ];
+  then
+  {
+    echo "Stopping SAS Customer Link Analytics Data Server"
+    "$CLADBSVRC_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_aacds()
+{
+#echo 'start_aacds()'
+  if [ -x "$AACDS_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$AACDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$AACDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Advanced Analytics Common Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do aacds script
+    echo "Starting SAS Advanced Analytics Common Data Server"
+    "$AACDS_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_aacds()
+{
+  if [ -x "$AACDS_CMD" ];
+  then
+  {
+    echo "Stopping SAS Advanced Analytics Common Data Server"
+    "$AACDS_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_dcmcomdsvrc()
+{
+#echo 'start_dcmcomdsvrc()'
+  if [ -x "$DCMCOMDSVRC_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$DCMCOMDSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$DCMCOMDSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Decision Manager Common Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do dcmcomdsvrc script
+    echo "Starting SAS Decision Manager Common Data Server"
+    "$DCMCOMDSVRC_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_dcmcomdsvrc()
+{
+  if [ -x "$DCMCOMDSVRC_CMD" ];
+  then
+  {
+    echo "Stopping SAS Decision Manager Common Data Server"
+    "$DCMCOMDSVRC_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_dmrmdtdsvrc()
+{
+#echo 'start_dmrmdtdsvrc()'
+  if [ -x "$DMRMDTDSVRC_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$DMRMDTDSVRC_DATA/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$DMRMDTDSVRC_DATA/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Data Remediation Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do dmrmdtdsvrc script
+    echo "Starting SAS Data Remediation Data Server"
+    "$DMRMDTDSVRC_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_dmrmdtdsvrc()
+{
+  if [ -x "$DMRMDTDSVRC_CMD" ];
+  then
+  {
+    echo "Stopping SAS Data Remediation Data Server"
+    "$DMRMDTDSVRC_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_jobmntrdsvrc()
+{
+#echo 'start_jobmntrdsvrc()'
+  if [ -x "$JOBMNTRDSVRC_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$JOBMNTRDSVRC_DATA/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$JOBMNTRDSVRC_DATA/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Job Monitor Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do jobmntrdsvrc script
+    echo "Starting SAS Job Monitor Data Server"
+    "$JOBMNTRDSVRC_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_jobmntrdsvrc()
+{
+  if [ -x "$JOBMNTRDSVRC_CMD" ];
+  then
+  {
+    echo "Stopping SAS Job Monitor Data Server"
+    "$JOBMNTRDSVRC_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_dmdsvrc()
+{
+#echo 'start_dmdsvrc()'
+  if [ -x "$DMDSVRC_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$DMDSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$DMDSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Data Management Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do dmdsvrc script
+    echo "Starting SAS Data Management Data Server"
+    "$DMDSVRC_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_dmdsvrc()
+{
+  if [ -x "$DMDSVRC_CMD" ];
+  then
+  {
+    echo "Stopping SAS Data Management Data Server"
+    "$DMDSVRC_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_fqads()
+{
+#echo 'start_fqads()'
+  if [ -x "$QASDS_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$QASDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$QASDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Quality Analytic Suite Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do fqads script
+    echo "Starting SAS Quality Analytic Suite Data Server"
+    "$QASDS_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_fqads()
+{
+  if [ -x "$QASDS_CMD" ];
+  then
+  {
+    echo "Stopping SAS Quality Analytic Suite Data Server"
+    "$QASDS_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_hprds()
+{
+#echo 'start_hprds()'
+  if [ -x "$HPRDS_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$HPRDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$HPRDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Risk Common Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do hprds script
+    echo "Starting SAS Risk Common Data Server"
+    "$HPRDS_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_hprds()
+{
+  if [ -x "$HPRDS_CMD" ];
+  then
+  {
+    echo "Stopping SAS Risk Common Data Server"
+    "$HPRDS_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_efds()
+{
+#echo 'start_efds()'
+  if [ -x "$EFDS_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$EFDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$EFDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Energy Forecasting Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do efds script
+    echo "Starting SAS Energy Forecasting Data Server"
+    "$EFDS_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_efds()
+{
+  if [ -x "$EFDS_CMD" ];
+  then
+  {
+    echo "Stopping SAS Energy Forecasting Data Server"
+    "$EFDS_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_mrmds()
+{
+#echo 'start_mrmds()'
+  if [ -x "$MRMDS_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$MRMDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$MRMDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Model Risk Management Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do mrmds script
+    echo "Starting SAS Model Risk Management Data Server"
+    "$MRMDS_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_mrmds()
+{
+  if [ -x "$MRMDS_CMD" ];
+  then
+  {
+    echo "Stopping SAS Model Risk Management Data Server"
+    "$MRMDS_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_capmds()
+{
+#echo 'start_capmds()'
+  if [ -x "$CAPMDS_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$CAPMDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$CAPMDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Cost And Profitability Management Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do capmds script
+    echo "Starting SAS Cost And Profitability Management Data Server"
+    "$CAPMDS_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_capmds()
+{
+  if [ -x "$CAPMDS_CMD" ];
+  then
+  {
+    echo "Stopping SAS Cost And Profitability Management Data Server"
+    "$CAPMDS_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_cxtds()
+{
+#echo 'start_cxtds()'
+  if [ -x "$CXTDS_CMD" ];
+  then
+  {
+#
+# if a server is already up, short-circuit this process
+#
+    if [ -r "$CXTDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$CXTDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Customer Experience Targeting Data Server is already UP"
+          return 0
+       fi
+    }
+    fi
+
+#echo do cxtds script
+    echo "Starting SAS Customer Experience Targeting Data Server"
+    "$CXTDS_CMD" $STARTCMD >/dev/null 2>&1
+
+    if [ "$?" -ne 0 ];
+      then return 1;
+    fi
+  }
+  fi
+  return 1; /* script not reachable/executable */
+}
+
+stop_cxtds()
+{
+  if [ -x "$CXTDS_CMD" ];
+  then
+  {
+    echo "Stopping SAS Customer Experience Targeting Data Server"
+    "$CXTDS_CMD" $STOPCMD >/dev/null 2>&1
+    rc=$?;
+    return $rc;
+  }
+  fi
+  return 1;
+}
+
+start_servers()
+{
+  start_wipds;
+  start_fmdbsvrc;
+  start_edodbs;
+  start_cladbsvrc;
+  start_ddcfdbsvrc;
+  start_invtoptdsvrc;
+  start_aacds;
+  start_dcmcomdsvrc;
+  start_dmrmdtdsvrc;
+  start_jobmntrdsvrc;
+  start_dmdsvrc;
+  start_fqads;
+  start_hprds;
+  start_efds;
+  start_mrmds;
+  start_capmds;
+  start_cxtds;
+}
+
+stop_servers()
+{
+# reverse order of start
+  stop_cxtds;
+  stop_capmds;
+  stop_mrmds;
+  stop_efds;
+  stop_hprds;
+  stop_fqads;
+  stop_dmdsvrc;
+  stop_jobmntrdsvrc;
+  stop_dmrmdtdsvrc;
+  stop_dcmcomdsvrc;
+  stop_aacds;
+  stop_invtoptdsvrc;
+  stop_ddcfdbsvrc;
+  stop_cladbsvrc;
+  stop_edodbs;
+  stop_fmdbsvrc;
+  stop_wipds;
+}
+
+server_status()
+{
+  if [ -x "$WIPDS_CMD" ];
+  then
+  {
+    if [ -r "$WIPDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$WIPDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Web Infrastructure Data Server is UP"
+       else
+          echo "SAS Web Infrastructure Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Web Infrastructure Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Financial Management Data Server
+  if [ -x "$FMDBSVRC_CMD" ];
+  then
+  {
+    if [ -r "$FMDBSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$FMDBSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Financial Management Data Server is UP"
+       else
+          echo "SAS Financial Management Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Financial Management Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Energy Distribution Optimization Data Server
+  if [ -x "$EDODBS_CMD" ];
+  then
+  {
+    if [ -r "$EDODBS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$EDODBS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Energy Distribution Optimization Data Server is UP"
+       else
+          echo "SAS Energy Distribution Optimization Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Energy Distribution Optimization Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Customer Link Analytics Data Server
+  if [ -x "$CLADBSVRC_CMD" ];
+  then
+  {
+    if [ -r "$CLADBSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$CLADBSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Customer Link Analytics Data Server is UP"
+       else
+          echo "SAS Customer Link Analytics Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Customer Link Analytics Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Forecast Analyst Workbench Data Server
+  if [ -x "$DDCFDBSVRC_CMD" ];
+  then
+  {
+    if [ -r "$DDCFDBSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$DDCFDBSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Forecast Analyst Workbench Data Server is UP"
+       else
+          echo "SAS Forecast Analyst Workbench Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Forecast Analyst Workbench Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Inventory Optimization Workbench Data Server
+  if [ -x "$INVTOPTDSVRC_CMD" ];
+  then
+  {
+    if [ -r "$INVTOPTDSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$INVTOPTDSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Inventory Optimization Workbench Data Server is UP"
+       else
+          echo "SAS Inventory Optimization Workbench Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Inventory Optimization Workbench Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Advanced Analytics Common Data Server
+  if [ -x "$AACDS_CMD" ];
+  then
+  {
+    if [ -r "$AACDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$AACDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Advanced Analytics Common Data Server is UP"
+       else
+          echo "SAS Advanced Analytics Common Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Advanced Analytics Common Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Decision Manager Common Data Server
+  if [ -x "$DCMCOMDSVRC_CMD" ];
+  then
+  {
+    if [ -r "$DCMCOMDSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$DCMCOMDSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Decision Manager Common Data Server is UP"
+       else
+          echo "SAS Decision Manager Common Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Decision Manager Common Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Data Remediation Data Server
+  if [ -x "$DMRMDTDSVRC_CMD" ];
+  then
+  {
+    if [ -r "$DMRMDTDSVRC_DATA/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$DMRMDTDSVRC_DATA/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Data Remediation Data Server is UP"
+       else
+          echo "SAS Data Remediation Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Data Remediation Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Job Monitor Data Server
+  if [ -x "$JOBMNTRDSVRC_CMD" ];
+  then
+  {
+    if [ -r "$JOBMNTRDSVRC_DATA/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$JOBMNTRDSVRC_DATA/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Job Monitor Data Server is UP"
+       else
+          echo "SAS Job Monitor Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Job Monitor Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Data Management Data Server
+  if [ -x "$DMDSVRC_CMD" ];
+  then
+  {
+    if [ -r "$DMDSVRC_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$DMDSVRC_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Data Management Data Server is UP"
+       else
+          echo "SAS Data Management Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Data Management Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Quality Analytic Suite Data Server
+  if [ -x "$QASDS_CMD" ];
+  then
+  {
+    if [ -r "$QASDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$QASDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Quality Analytic Suite Data Server is UP"
+       else
+          echo "SAS Quality Analytic Suite Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Quality Analytic Suite Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Risk Common Data Server
+  if [ -x "$HPRDS_CMD" ];
+  then
+  {
+    if [ -r "$HPRDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$HPRDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Risk Common Data Server is UP"
+       else
+          echo "SAS Risk Common Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Risk Common Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Energy Forecasting Data Server
+  if [ -x "$EFDS_CMD" ];
+  then
+  {
+    if [ -r "$EFDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$EFDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Energy Forecasting Data Server is UP"
+       else
+          echo "SAS Energy Forecasting Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Energy Forecasting Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Model Risk Management Data Server
+  if [ -x "$MRMDS_CMD" ];
+  then
+  {
+    if [ -r "$MRMDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$MRMDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Model Risk Management Data Server is UP"
+       else
+          echo "SAS Model Risk Management Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Model Risk Management Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Cost And Profitability Management Data Server
+  if [ -x "$CAPMDS_CMD" ];
+  then
+  {
+    if [ -r "$CAPMDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$CAPMDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Cost And Profitability Management Data Server is UP"
+       else
+          echo "SAS Cost And Profitability Management Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Cost And Profitability Management Data Server is NOT up"
+    fi
+  }
+  fi
+
+# SAS Customer Experience Targeting Data Server
+  if [ -x "$CXTDS_CMD" ];
+  then
+  {
+    if [ -r "$CXTDS_DIR/data/postmaster.pid" ];
+    then
+    {
+       pid=`head -n 1 "$CXTDS_DIR/data/postmaster.pid"`
+       kill -0 $pid > /dev/null 2>&1
+       if [ $? -eq 0 ]; then
+          # Server is already running
+          echo "SAS Customer Experience Targeting Data Server is UP"
+       else
+          echo "SAS Customer Experience Targeting Data Server is NOT up"
+       fi
+    }
+    else
+      echo "SAS Customer Experience Targeting Data Server is NOT up"
+    fi
+  }
+  fi
+
+# End of status group
+  return 0;
+}
+
+#
+# Main processing routine
+#
+
+# Set up for platform-specific command paths
+
+case "$OSTYPE" in
+
+  aix | hpux | rhel | sles)
+    WHOAMI="/usr/bin/whoami"
+    TAIL="/usr/bin/tail -n "  # trailing space is significant
+    ;;
+
+  sun)
+    WHOAMI="/usr/ucb/whoami"
+    TAIL="/usr/xpg4/bin/tail -n " # trailing space is significant
+    ;;
+
+  zos)
+    WHOAMI="/bin/whoami"
+    TAIL="/bin/tail -n "  # trailing space is significant
+    ;;
+
+  *)
+    echo $0: "Couldn't determine the OS type for processing. OSTYPE=$OSTYPE"
+    echo "Giving up..."
+    echo
+    exit 1
+    ;;
+esac
+
+# To avoid protection issues for installs mounted over NFS, rerun
+# ourselves as the UID that owns the installed SAS code.
+#
+#echo UID is `$WHOAMI`
+
+if [ `$WHOAMI` != "$SERVERUSER" ];
+then
+{
+#echo Invoking su $SERVERUSER -c $0 $1
+
+  su "$SERVERUSER" -c "$0 $1"
+  exit $?
+}
+fi
+
+case "$1" in
+  start)
+    start_servers;
+    exit $?
+    ;;
+
+  stop)
+    stop_servers;
+    ;;
+
+  restart|reload)
+    stop_servers;
+    sleep 15;           # let everything quiesce
+    start_servers;
+    exit $?
+    ;;
+
+  status)
+    server_status;
+    exit $?
+    ;;
+
+  *)
+    echo "Usage $0 {$STARTCMD|$STOPCMD|$RESTARTCMD|$STATUSCMD}"
+    exit 1;
+
+esac
+

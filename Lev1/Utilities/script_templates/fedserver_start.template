@@ -1,0 +1,20 @@
+FEDERATION_SERVER_DIR=
+FEDERATION_SERVER_LOGS=$FEDERATION_SERVER_DIR/var/Logs
+FEDERATION_SERVER_CONTEXT="NULL"
+
+  if [ -x "$FEDERATION_SERVER_DIR/bin/dfsadmin.sh" ];
+  then
+  {
+    start_fed_server;
+    if [ "$?" -eq 0 ];
+    then $Logmsg "$SASFEDSRV_IS_UP";
+    else $Logmsg "$SASFEDSRV_IS_DOWN";
+    fi;
+  }
+  else
+  {
+    $Logmsg "$SASFEDSRV_SCRIPT_ACCESS"
+    $Logmsg "$SASFEDSRV_IS_DOWN"
+  }
+  fi
+

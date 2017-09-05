@@ -1,0 +1,17 @@
+TABLE_SERVER_DIR=
+
+    if [ -f $TABLE_SERVER_DIR/server.pid ];
+    then
+    {
+      pid=`cat $TABLE_SERVER_DIR/server.pid`
+      kill -0 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         $Logmsg "$SASTABLE_INSTANCE_IS_UP"
+      else
+         $Logmsg "$SASTABLE_INSTANCE_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$SASTABLE_INSTANCE_IS_DOWN"
+    fi
+
