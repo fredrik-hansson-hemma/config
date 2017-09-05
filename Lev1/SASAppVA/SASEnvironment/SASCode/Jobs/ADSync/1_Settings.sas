@@ -1,9 +1,10 @@
 /* Specify target metadata server connection details */
+* Lösenordet för sasadm@saspw är satt i programmet 0_passwords.sas	;
 options metaserver='bs-ap-02.lul.se'
 metaport=8561
 metaprotocol='bridge'
 metauser='sasadm@saspw'
-metapass='XXXXXXXXXXXXXXXXXXXXXXXXXX'
+metapass=&metapass
 metarepository='Foundation'
 metaconnect='NONE'
 ;
@@ -39,11 +40,8 @@ libname metaUpd "&ADSyncStaging/MetaUpdate";
 %let GROUP_FILTER=*SAS;
 %let GROUP_FILTER2=LUL-SYSTEM-SAS-*;
 
-/* Username and password connect to the Active Directory server and extract information */
-%* let ADBindUser = "LUL-NET\mom034";
-%* let ADBindPW   = "XXXXXXXXXXXXXXXXXXXXXXXXXX";
-%let ADBindUser = "LUL-NET\haf010";
-%let ADBindPW   = "XXXXXXXXXXXXXXXXXXXXXXXXXX";
+/* Användarnamn och lösenord för att ansluta till Active Directory server och extrahera information är satta i programmet 0_passwords.sas */
+
 
 /****************************************************************************/
 /* Set the name of the windows domain that should be prepended with a '\'   */

@@ -35,6 +35,7 @@
 %let ADSyncPgm=/opt/sas/config/Lev1/SASAppVA/SASEnvironment/SASCode/Jobs/ADSync;
 %let ADSyncStaging = /saswork/LUL/ADSync;
 
+%include "&ADSyncPgm/0_passwords.sas";
 %include "&ADSyncPgm/1_Settings.sas";
 %include "&ADSyncPgm/2_Macros.sas";
 
