@@ -111,7 +111,7 @@ ods listing;
 %end;
 
 filename outbox email
-        to=('mattias.moliis@infotrek.se' 'beslutsstod@support.lul.se')
+        to=('fredrik.hansson@regionuppsala.se' 'beslutsstod@support.lul.se')
         subject="&subject"
         attach=("&path.Finns i AD och inte i EkonomiskOrganisation &today..csv" 
 								"&path.Finns i EkonomiskOrganisation och inte i AD &today..csv")

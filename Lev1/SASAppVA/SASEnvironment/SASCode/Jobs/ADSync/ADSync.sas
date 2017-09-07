@@ -108,7 +108,7 @@ run;
 
     
 		filename outbox email 
-	  to=("mattias.moliis@infotrek.se" "bjorn.rengerstam@akademiska.se" "magnus.knopf@akademiska.se" "peter.ostrom@akademiska.se" "fredrik.hansson@regionuppsala.se") 
+	  to=("bjorn.rengerstam@akademiska.se" "magnus.knopf@akademiska.se" "peter.ostrom@akademiska.se" "fredrik.hansson@regionuppsala.se") 
 	  subject="ADSynk stoppad. Rensa bland SAS-grupper och användarkonton";
 
     data _null_;
