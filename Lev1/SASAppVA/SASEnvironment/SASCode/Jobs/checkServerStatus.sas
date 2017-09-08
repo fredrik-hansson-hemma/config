@@ -27,7 +27,7 @@ quit;
 %if &flagga > 0 %then %do;
   
 filename outbox email 
-	to=("mattias.moliis@infotrek.se" "fredrik.hansson@regionuppsala.se" "bjorn.rengerstam@akademiska.se" "magnus.knopf@akademiska.se") 
+	to=("fredrik.hansson@regionuppsala.se" "bjorn.rengerstam@akademiska.se" "magnus.knopf@akademiska.se") 
 	subject="SAS Servers not running"
 	attach=("/tmp/SASServerStatus.txt")
  ;

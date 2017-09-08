@@ -136,11 +136,40 @@ run;
 ods html close;
 ods listing;
 
+
+                 /*****************
+
+
+%let subject=test;
+
+filename outbox email
+        to=("fredrik.hansson@regionuppsala.se")
+        subject="&subject"
+        attach=("&path.completejobs.html" "&path.errorjobs.html")
+ content_type="text/html";
+
+ data _null_;
+    file myemail;
+    infile complete lrecl=32767;
+    input;
+    put _infile_;
+ run;
+
+
+ filename outbox clear;
+
+
+
+
+
+
+
+                                   ******************/
 %if &antalerror ne 0 %then %do;
 	%let subject = Status batch - jobb i error; 
 
 	filename outbox email 
-	to=("mattias.moliis@infotrek.se" "fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se") 
+	to=("fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se") 
 	subject="&subject"
 	attach=("&path.completejobs.html" "&path.errorjobs.html")
  ;
@@ -159,7 +188,7 @@ run;
 	%let subject = Status batch Beslutsstöd - jobb i error; 
 
 	filename outbox email 
-	to=("mattias.moliis@infotrek.se" "fredrik.hansson@regionuppsala.se" "ftv.it@lul.se") 
+	to=("fredrik.hansson@regionuppsala.se" "ftv.it@lul.se") 
 	subject="&subject"
 	attach=("&path.completejobs_FTV.html" "&path.errorjobs_FTV.html")
  ;
@@ -189,7 +218,7 @@ run;
 	%let subject = Status batch Beslutsstöd - jobb i error; 
 
 	filename outbox email 
-	to=("mattias.moliis@infotrek.se" "fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se"
+	to=("fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se"
   "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se") 
 	subject="&subject"
 	attach=("&path.completejobs_EPJ.html" "&path.errorjobs_EPJ.html")
@@ -206,7 +235,7 @@ run;
 	%let subject = Status batch Beslutstöd - jobb ok!;
 
 	filename outbox email 
-	to=("mattias.moliis@infotrek.se" "fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se"
+	to=("fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se"
   "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se") 
 	subject="&subject"
 	attach=("&path.completejobs_EPJ.html")
