@@ -14,7 +14,7 @@
 . `dirname $0`/../appservercontext_env.sh
 
 CONFIGDIR=$APPSERVER_ROOT/StoredProcessServer
-LOGSDIR=/opt/sas/config/Lev1/SASAppVA/StoredProcessServer/Logs
+LOGSDIR=/opt/sas/config/Lev1/SASApp_VA/StoredProcessServer/Logs
 CMD_OPTIONS=""
 
 # Source usermods file

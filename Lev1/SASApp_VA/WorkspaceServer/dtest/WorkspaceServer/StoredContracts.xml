@@ -9,7 +9,7 @@
       xsi:noNamespaceSchemaLocation="http://www.sas.com/xml/schema/dpro/stored-contracts-1.5.xsd">
 
 	<StoredContract>
-		<dir>/opt/sas/config/Lev1/SASAppVA/WorkspaceServer/dtest/WorkspaceServer</dir>
+		<dir>/opt/sas/config/Lev1/SASApp_VA/WorkspaceServer/dtest/WorkspaceServer</dir>
 		<file>SetinitTest_contract.xml</file>
 		<displayName>Workspace Server setinit Test (SASAppVA)</displayName>
 		<keywords>

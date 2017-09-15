@@ -8,5 +8,5 @@
  */
 
 /* Include autoexec files */
-%include "/opt/sas/config/Lev1/SASAppVA/appserver_autoexec.sas";
-%include "/opt/sas/config/Lev1/SASAppVA/WorkspaceServer/autoexec_usermods.sas";
+%include "/opt/sas/config/Lev1/SASApp_VA/appserver_autoexec.sas";
+%include "/opt/sas/config/Lev1/SASApp_VA/WorkspaceServer/autoexec_usermods.sas";

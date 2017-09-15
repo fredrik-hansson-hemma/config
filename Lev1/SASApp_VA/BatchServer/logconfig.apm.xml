@@ -81,7 +81,7 @@ _ENDDISARM
  <param name="Append" value="false"/>
  <param name="Unique" value="true"/>
  <param name="ImmediateFlush" value="true"/>
- <param name="FileNamePattern" value="/opt/sas/config/Lev1/SASAppVA/BatchServer/PerfLogs/arm4_BatchServer_%d{yyyy-MM-dd_HH.mm.ss}_%S{hostname}_%S{pid}.log"/>
+ <param name="FileNamePattern" value="/opt/sas/config/Lev1/SASApp_VA/BatchServer/PerfLogs/arm4_BatchServer_%d{yyyy-MM-dd_HH.mm.ss}_%S{hostname}_%S{pid}.log"/>
  <layout>                              
  <param name="ConversionPattern"
  value="%d|%c|%56X{ARM.ParentCorrelator}|%56X{ARM.CurrentCorrelator}|%X{ARM2.Record}"/>

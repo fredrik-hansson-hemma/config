@@ -7,7 +7,7 @@
       <param name="Unique" value="true"/>
       <param name="ImmediateFlush" value="true"/>      
       <rollingPolicy class="TimeBasedRollingPolicy">
-         <param name="FileNamePattern" value="/opt/sas/config/Lev1/SASAppVA/WorkspaceServer/Logs/SASAppVA_WorkspaceServer_%d_%S{hostname}_%S{pid}.log"/>
+         <param name="FileNamePattern" value="/opt/sas/config/Lev1/SASApp_VA/WorkspaceServer/Logs/SASAppVA_WorkspaceServer_%d_%S{hostname}_%S{pid}.log"/>
          <param name="rollOver" value="false"/>
       </rollingPolicy>
       <layout>

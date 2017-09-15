@@ -22,7 +22,7 @@ CONFIGDIR="$APPSERVER_ROOT"/'BatchServer'
 . "$CONFIGDIR"/'sasbatch_usermods.sh'
 
 # Set config file path
-SASCFGPATH="/opt/sas/config/Lev1/SASAppVA/sasv9.cfg, /opt/sas/config/Lev1/SASAppVA/sasv9_usermods.cfg, /opt/sas/config/Lev1/SASAppVA/BatchServer/sasv9.cfg, /opt/sas/config/Lev1/SASAppVA/BatchServer/sasv9_usermods.cfg"
+SASCFGPATH="/opt/sas/config/Lev1/SASApp_VA/sasv9.cfg, /opt/sas/config/Lev1/SASApp_VA/sasv9_usermods.cfg, /opt/sas/config/Lev1/SASApp_VA/BatchServer/sasv9.cfg, /opt/sas/config/Lev1/SASApp_VA/BatchServer/sasv9_usermods.cfg"
 export SASCFGPATH
 
 "$SAS_COMMAND" -noxcmd -lrecl 32767 "$@" "${USERMODS_OPTIONS[@]}"
@@ -32,4 +32,4 @@ rc=$?
 #  rc=0
 #fi
 dt=`date +%Y%m%d`
-echo "/opt/sas/config/Lev1/SASAppVA/BatchServer/sasbatch.sh" "$@" "Retur:"$rc "Datum:"$dt>> /saswork/batchrun/returncodes.txt 
+echo "/opt/sas/config/Lev1/SASApp_VA/BatchServer/sasbatch.sh" "$@" "Retur:"$rc "Datum:"$dt>> /saswork/batchrun/returncodes.txt 
