@@ -25,7 +25,7 @@
 * VATABLE: Den tabell som ska uppdateras med nya kolumnbeskrivningar.;
 %let vatable = %upcase(&vatable); 
 
-LIBNAME EPJLA SASIOLA  TAG=epj  PORT=10015 SIGNER="https://rapport.lul.se:443/SASLASRAuthorization"  HOST="bs-ap-04.lul.se" ;
+LIBNAME EPJLA SASIOLA  TAG=epj  PORT=10015 SIGNER="https://bs-ap-20.lul.se:443/SASLASRAuthorization"  HOST="bs-ap-04.lul.se" ;
 %if %sysfunc(upcase(&lib)) = CI %then %do;
 LIBNAME CI SQLSVR  Datasrc=CI  SCHEMA=sas  USER=SASuser  PASSWORD="{SAS002}D5A637533C6B67F53704EDD41A1D2C5C301551034643E140331BDB6600E420812E813CF119A85CC3" ;
 %end;

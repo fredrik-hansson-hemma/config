@@ -6,10 +6,10 @@
 
     proc lasr create PORT=&port
       path="/saswork/signaturefiles"
-      signer="https://rapport.lul.se:443/SASLASRAuthorization"
+      signer="https://bs-ap-20.lul.se:443/SASLASRAuthorization"
       tablemem=80
       ;
-      performance host="rapport.lul.se"
+      performance host="bs-ap-20.lul.se"
       install="/opt/TKGrid"
       nodes=ALL
       ;

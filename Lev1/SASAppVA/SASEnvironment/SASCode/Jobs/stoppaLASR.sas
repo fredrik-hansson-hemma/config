@@ -5,8 +5,8 @@
 	proc printto print='/tmp/procoutputLASR.lst';
 
   proc lasr stop PORT=&port
-    signer="https://rapport.lul.se:443/SASLASRAuthorization";
-    performance host="rapport.lul.se";
+    signer="https://bs-ap-20.lul.se:443/SASLASRAuthorization";
+    performance host="bs-ap-20.lul.se";
   run;
 
 	%mend;

@@ -16,17 +16,17 @@
   %put Tabell &vatable från Hadoop kommer att laddas in i LASR-minnet.;
 %end;
 
-%LET VDB_GRIDHOST=rapport.lul.se;
+%LET VDB_GRIDHOST=bs-ap-20.lul.se;
 %LET VDB_GRIDINSTALLLOC=/opt/TKGrid;
-options set=GRIDHOST="rapport.lul.se";
+options set=GRIDHOST="bs-ap-20.lul.se";
 options set=GRIDINSTALLLOC="/opt/TKGrid";
 options validvarname=any validmemname=extend noerrorabend;
 
 proc printto print='/tmp/procoutput.lst';
 
 * Olika Signer per LASR-server.; 
-LIBNAME LASR SASIOLA  TAG=&tag  PORT=&port HOST="rapport.lul.se"  SIGNER="&signer" ;
-LIBNAME HADOOP SASHDAT  PATH="&path"  SERVER="rapport.lul.se"  INSTALL="/opt/TKGrid" ;
+LIBNAME LASR SASIOLA  TAG=&tag  PORT=&port HOST="bs-ap-20.lul.se"  SIGNER="&signer" ;
+LIBNAME HADOOP SASHDAT  PATH="&path"  SERVER="bs-ap-20.lul.se"  INSTALL="/opt/TKGrid" ;
 
 * Hämtar alla tabeller som finns i Hadoop.;
 proc sql noprint;
@@ -69,7 +69,7 @@ proc lasr port=&port.
     data=HADOOP.&loadtable
     signer="&signer"
     add noclass;
-    performance host="rapport.lul.se";
+    performance host="bs-ap-20.lul.se";
 run;
 
 %end;
@@ -86,7 +86,7 @@ LIBNAME HADOOP clear ;
 
 
 * Anrop;
-%load_lasrfromhadoop(VATABLE=, TAG=hps, PATH=/hps, PORT=10010, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization); 
-%load_lasrfromhadoop(VATABLE=, TAG=epj, PATH=/epj, PORT=10015, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
-%load_lasrfromhadoop(VATABLE=, TAG=lrc, PATH=/lrc, PORT=10016, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
-%load_lasrfromhadoop(VATABLE=, TAG=ftv, PATH=/ftv, PORT=10017, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=hps, PATH=/hps, PORT=10010, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization); 
+%load_lasrfromhadoop(VATABLE=, TAG=epj, PATH=/epj, PORT=10015, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=lrc, PATH=/lrc, PORT=10016, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=ftv, PATH=/ftv, PORT=10017, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);

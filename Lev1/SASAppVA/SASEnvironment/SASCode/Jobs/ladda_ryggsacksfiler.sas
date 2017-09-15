@@ -34,13 +34,13 @@
 	* Data mellanlagras på Public Server;
 	libname pub "/opt/sas/config/Lev1/AppData/SASVisualAnalytics/VisualAnalyticsAdministrator/PublicDataProvider";  
   * VA LASR Public; 
-  LIBNAME LASRLIB SASIOLA  TAG=VAPUBLIC  PORT=10031 HOST="rapport.lul.se"  SIGNER="https://rapport.lul.se:443/SASLASRAuthorization" ;
+  LIBNAME LASRLIB SASIOLA  TAG=VAPUBLIC  PORT=10031 HOST="bs-ap-20.lul.se"  SIGNER="https://bs-ap-20.lul.se:443/SASLASRAuthorization" ;
 
   options validvarname = any validmemname=extend;
  
-	%LET VDB_GRIDHOST=rapport.lul.se;
+	%LET VDB_GRIDHOST=bs-ap-20.lul.se;
   %LET VDB_GRIDINSTALLLOC=/opt/TKGrid;
-  options set=GRIDHOST="rapport.lul.se";
+  options set=GRIDHOST="bs-ap-20.lul.se";
   options set=GRIDINSTALLLOC="/opt/TKGrid";
 	
 	data _null_;
