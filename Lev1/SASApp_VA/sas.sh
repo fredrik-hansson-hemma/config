@@ -28,7 +28,7 @@ Quoteme() {
       quoteme=$1
    fi
 }
-SAS_CMD_OPTIONS="-metaautoresources 'SASAppVA'"
+SAS_CMD_OPTIONS="-metaautoresources 'SASApp_VA'"
 cmd="$SAS_COMMAND $SAS_CMD_OPTIONS $SAS_USERMODS_OPTIONS"
 
 for arg in "$@" ; do

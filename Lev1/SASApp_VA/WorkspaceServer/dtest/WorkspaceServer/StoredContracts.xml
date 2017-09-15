@@ -11,7 +11,7 @@
 	<StoredContract>
 		<dir>/opt/sas/config/Lev1/SASApp_VA/WorkspaceServer/dtest/WorkspaceServer</dir>
 		<file>SetinitTest_contract.xml</file>
-		<displayName>Workspace Server setinit Test (SASAppVA)</displayName>
+		<displayName>Workspace Server setinit Test (SASApp_VA)</displayName>
 		<keywords>
 			<keyword>SAS Test Suite</keyword>
 			<keyword>UserAndPasswordNeeded</keyword>

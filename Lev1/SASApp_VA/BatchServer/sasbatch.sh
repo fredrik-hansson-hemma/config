@@ -13,7 +13,7 @@ unset METAUSER
 unset METAPASS
 
 # Source appserver_env
-parentpath='/opt/sas/config/Lev1/SASAppVA'
+parentpath='/opt/sas/config/Lev1/SASApp_VA'
 . "$parentpath/appservercontext_env.sh"
 
 CONFIGDIR="$APPSERVER_ROOT"/'BatchServer'

@@ -34,7 +34,44 @@
       <filter class="DenyAllFilter"/>
       <layout>
          <param name="ConversionPattern"
-                value=" "/>
+                value=
+"NOTE: %X{ARM.TranName}|
+_DISARM|
+%12X{ARM.TranState}|
+_DISARM|
+%d{ISO8601ZONE}|
+_DISARM|
+%X{App.Name}|
+_DISARM|
+%X{ARM.GroupName}|
+_DISARM|
+%X{ARM.Metric6.Value}|
+_DISARM|
+%X{ARM.Metric3.Value}|
+_DISARM|
+%X{ARM.TranStop.Mem_Current}|
+_DISARM|
+%X{ARM.TranStop.Thread_Current}|
+_DISARM|
+%X{ARM.TranStop.Thread_High}|
+_DISARM|
+%X{ARM.IO_Count}|
+_DISARM|
+%X{ARM.TranStop.IO_Count}|
+_DISARM|
+%X{ARM.TranResp.Total_CPU_Time}|
+_DISARM|
+%X{ARM.TranResp.Time}|
+_DISARM|
+%X{ARM.TranStart.Time}|
+_DISARM|
+%X{ARM.TranStop.Time}|
+_DISARM|
+%X{ARM.TranResp.User_CPU_Time}|
+_DISARM|
+%X{ARM.Metric7.Value}|
+_ENDDISARM
+"/>
       </layout>
    </appender>
 

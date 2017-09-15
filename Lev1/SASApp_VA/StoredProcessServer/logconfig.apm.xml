@@ -7,7 +7,7 @@
       <param name="Unique" value="true"/>
       <param name="ImmediateFlush" value="true"/>      
       <rollingPolicy class="TimeBasedRollingPolicy">
-         <param name="FileNamePattern" value="/opt/sas/config/Lev1/SASApp_VA/StoredProcessServer/Logs/SASAppVA_STPServer_%d_%S{hostname}_%S{pid}.log"/>
+         <param name="FileNamePattern" value="/opt/sas/config/Lev1/SASApp_VA/StoredProcessServer/Logs/SASApp_VA_STPServer_%d_%S{hostname}_%S{pid}.log"/>
       </rollingPolicy>
       <layout>
          <param name="HeaderPattern" value="Host: '%S{hostname}', OS: '%S{os_family}', Release: '%S{os_release}', SAS Version: '%S{sup_ver_long2}', Command: '%S{startup_cmd}'"/>

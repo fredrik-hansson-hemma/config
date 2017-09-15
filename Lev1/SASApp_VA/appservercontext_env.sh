@@ -12,7 +12,7 @@ else
    . `dirname $0`/../../level_env.sh
 fi
 
-APPSERVER_ROOT=$LEVEL_ROOT/SASAppVA
+APPSERVER_ROOT=$LEVEL_ROOT/SASApp_VA
 
 . $APPSERVER_ROOT/appservercontext_env_usermods.sh
 
