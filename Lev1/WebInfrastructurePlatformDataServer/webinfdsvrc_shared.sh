@@ -17,6 +17,12 @@ SCRIPT=`basename $0`
 SERVERUSER=sas
 COMMAND=""/opt/sas/sashome/SASWebInfrastructurePlatformDataServer/9.4/bin/pg_ctl""
 
+# S1083332 & S1081892 - make sure we start on the host we were configured on
+HOSTNAME=$(hostname -s)
+IPADDR=$(host -n $HOSTNAME | awk '{print $4;}')
+CONFIGHOSTNAME=bs-ap-20
+CONFIGIPADDR=$(host -n $CONFIGHOSTNAME | awk '{print $4;}')
+
 # Set config file path
 # SASCFGPATH="$LEVEL_ROOT/sasv9_meta.cfg, $CONFIGDIR/@iomsrv.webinfdsvrc.config.file.name@, $CONFIGDIR/@iomsrv.webinfdsvrc.config.usermods.file.name@"
 # export SASCFGPATH
@@ -31,19 +37,24 @@ fi
 # Get argument
 case "$1" in
    start | -start)
-         if [ -f $CONFIGDIR/data/postmaster.pid ]; then
-            pid=`head -1 $CONFIGDIR/data/postmaster.pid`
-            kill -0 $pid > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
-               echo "Server is already running (pid $pid)"
-               exit 0
+         if [ "$IPADDR" = "$CONFIGIPADDR" ]; then
+            if [ -f $CONFIGDIR/data/postmaster.pid ]; then
+               pid=`head -1 $CONFIGDIR/data/postmaster.pid`
+               kill -0 $pid > /dev/null 2>&1
+               if [ $? -eq 0 ]; then
+                  echo "Server is already running (pid $pid)"
+                  exit 0
+               fi
+               rm $CONFIGDIR/data/postmaster.pid
             fi
-            rm $CONFIGDIR/data/postmaster.pid
-         fi
-         if [ $root -eq 1 ]; then
-            su - $SERVERUSER -c "$CONFIGDIR/$SCRIPT start2_tag &"
+            if [ $root -eq 1 ]; then
+               su - $SERVERUSER -c "$CONFIGDIR/$SCRIPT start2_tag &"
+            else
+               $CONFIGDIR/$SCRIPT start2_tag &
+            fi
          else
-            $CONFIGDIR/$SCRIPT start2_tag &
+             echo "Start failure due to start issued on the incorrect host.  $HOSTNAME != $CONFIGHOSTNAME  $IPADDR != $CONFIGIPADDR"
+             exit 0
          fi
          ;;
    start2_tag)
