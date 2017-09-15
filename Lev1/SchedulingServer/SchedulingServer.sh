@@ -1,4 +1,4 @@
-#!/bin/bash -p
+#!/bin/ksh -p
 #
 # schedulingserver.sh
 #
