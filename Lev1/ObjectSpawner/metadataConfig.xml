@@ -10,7 +10,7 @@
                   <Domain>
                      <AuthenticationDomain Name="DefaultAuth">
                         <Logins>
-                           <Login Name="Metadata Login" Password="{sas002}4205E5173471DADE11BB532427F1621908390CCF" UserID="sastrust@saspw"/>
+                           <Login Name="Metadata Login" Password="{sas002}31319E14412A1470224993D34C567C68029D80324E04A676" UserID="sastrust@saspw"/>
                         </Logins>
                      </AuthenticationDomain>
                   </Domain>
