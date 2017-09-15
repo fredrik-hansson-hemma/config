@@ -7,7 +7,7 @@
       <UsingComponents>
          <ServerComponent ClassIdentifier="0217e202-b560-11db-ad91-001083ff6836" Name="SAS Metadata Server">
             <SourceConnections>
-               <TCPIPConnection ApplicationProtocol="Bridge" CommunicationProtocol="TCP" HostName="bs-ap-02.lul.se" Name="SAS Metadata Server" Port="8561"/>
+               <TCPIPConnection ApplicationProtocol="Bridge" CommunicationProtocol="TCP" HostName="bs-ap-20.lul.se" Name="SAS Metadata Server" Port="8561"/>
             </SourceConnections>
          </ServerComponent>
       </UsingComponents>

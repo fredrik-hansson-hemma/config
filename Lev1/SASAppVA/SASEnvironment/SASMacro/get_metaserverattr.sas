@@ -14,8 +14,8 @@ proc format;
     bst = "8561"
   ;
   value $metaserver 
-    bs = "bs-ap-02.lul.se"
-    bst = "bst-apx-02.lul.se"
+    bs = "bs-ap-20.lul.se"
+    bst = "bst-apx-20.lul.se"
   ;
   value $metauser 
     bs = "sasadm@saspw"

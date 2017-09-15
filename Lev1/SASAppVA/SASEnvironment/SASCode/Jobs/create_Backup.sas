@@ -19,16 +19,16 @@ data _null_;
   * Sökväg där Export Package tool finns.;
   put "cd /opt/sas/sashome/SASPlatformObjectFramework/9.4"; 
   * Anropar Export Package Tool. - Allt under folder User Folders. Exkluderar tomma kataloger;
-  put "./ExportPackage -host bs-ap-02.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -package  '&backuppath.UserFolders_&datum..spk' -objects  '/User Folders' -types 'Folder,Report,Table,Project,InformationMap,Cube' -includeDep -disableX11";
+  put "./ExportPackage -host bs-ap-20.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -package  '&backuppath.UserFolders_&datum..spk' -objects  '/User Folders' -types 'Folder,Report,Table,Project,InformationMap,Cube' -includeDep -disableX11";
   * Folder Utveckling.;	
-  put "./ExportPackage -host bs-ap-02.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -package  '&backuppath.LUL_&datum..spk' -objects  '/LUL' -types 'Folder,Report,Table,Project,InformationMap,Cube' -includeDep -disableX11";
+  put "./ExportPackage -host bs-ap-20.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -package  '&backuppath.LUL_&datum..spk' -objects  '/LUL' -types 'Folder,Report,Table,Project,InformationMap,Cube' -includeDep -disableX11";
   
 	* Folder Acceptanstest.;	
-  put "./ExportPackage -host bs-ap-02.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -package  '&backuppath.LULgemensam_&datum..spk' -objects  '/LUL gemensam' -types 'Folder,Report,Table,Project,InformationMap,Cube' -includeDep -disableX11";
+  put "./ExportPackage -host bs-ap-20.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -package  '&backuppath.LULgemensam_&datum..spk' -objects  '/LUL gemensam' -types 'Folder,Report,Table,Project,InformationMap,Cube' -includeDep -disableX11";
 	
 	* Folder Shared Data.;
 	/*
-  put "./ExportPackage -host bs-ap-02.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -package  '&backuppath.SharedData_&datum..spk' -objects  '/Shared Data' -types Folder Report Table Project InformationMap Cube -includeDep";
+  put "./ExportPackage -host bs-ap-20.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -package  '&backuppath.SharedData_&datum..spk' -objects  '/Shared Data' -types Folder Report Table Project InformationMap Cube -includeDep";
 	*/
 run;
 

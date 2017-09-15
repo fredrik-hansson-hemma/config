@@ -24,7 +24,7 @@ data _null_;
   * Sökväg där sas-list-objects finns.;
   put "cd /opt/sas/sashome/SASPlatformObjectFramework/9.4/tools"; 
   * listar alla ACT:er som heter något på LUL-;
-  put './sas-list-objects -host  bs-ap-02.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -types ACT -name "LUL-" > /tmp/act.txt';
+  put './sas-list-objects -host  bs-ap-20.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE -types ACT -name "LUL-" > /tmp/act.txt';
 run;
 
 * Sätter rättigheter på skriptet.;
@@ -120,12 +120,12 @@ data _null_ (encoding=utf8);
 	if substr(left(reverse(name)), 1, 2) = 'W-' and count(name, '-') <4 then do;
 	text = compress(name||':ReadMetadata,WriteMetadata,CheckInMetadata,WriteMemberMetadata,ManageMemberMetadata,ManageCredentialsMetadata,Read,Write,Create,Delete,Select,Insert,Update,');
   
-  put './sas-make-act -host  bs-ap-02.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE "' name 'ACT" -create -grant ' text;
+  put './sas-make-act -host  bs-ap-20.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE "' name 'ACT" -create -grant ' text;
   end;
 	if substr(left(reverse(name)), 1, 2) ^= 'W-' then  do;
 	text = compress(name||':Read,ReadMetadata,Select');
   
-	put './sas-make-act -host  bs-ap-02.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE "' name 'ACT" -create -grant ' text;
+	put './sas-make-act -host  bs-ap-20.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE "' name 'ACT" -create -grant ' text;
   end;
 run;
 
@@ -206,7 +206,7 @@ data _null_ (encoding=utf8);
   file "&filepath.deleteACT.sh" mod;
   set tabort_act (keep=name); 
 	text = '"/System/Security/Access Control Templates/' || compress(name || '(ACT)"');
-  put './sas-delete-objects -host  bs-ap-02.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE ' text;
+  put './sas-delete-objects -host  bs-ap-20.lul.se -port 8561 -user sasadm@saspw -password {SAS002}3625302A57941B764B291B5F2AB04D0C100A61DE ' text;
 run;
 
 * Sätter rättigheter på skriptet.;
