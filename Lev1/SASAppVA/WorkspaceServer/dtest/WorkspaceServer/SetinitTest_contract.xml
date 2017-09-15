@@ -68,7 +68,7 @@
    <info text="Running Workspace Server tests..."/>
    <set name="logFile" value="SetinitTest_serviceLog.xml"/>
    <WorkspaceJob container="${contID}" serviceLog="${logFile}" resultsID="wsRes"
-         host="bs-ap-04.lul.se"
+         host="bs-ap-20.lul.se"
          port="8591"
          userid="${userid}"
          password="${password}"

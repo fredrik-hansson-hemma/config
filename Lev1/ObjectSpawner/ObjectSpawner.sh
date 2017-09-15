@@ -16,9 +16,9 @@ CONFIGDIR=$LEVEL_ROOT/ObjectSpawner
 LOGSDIR=/opt/sas/config/Lev1/ObjectSpawner/Logs
 SASENV=$SASROOT/bin/sasenv
 OMRCFG=$LEVEL_ROOT/ObjectSpawner/metadataConfig.xml
-SPWNNAME="Object Spawner - bs-ap-04"
+SPWNNAME="Object Spawner - bs-ap-20"
 SERVERUSER=sas
-CMD_OPTIONS=" -dnsmatch bs-ap-04.lul.se -sspi "
+CMD_OPTIONS=" -dnsmatch bs-ap-20.lul.se -sspi "
 COMMAND="$SASROOT/utilities/bin/objspawn"
 SCRIPT=`basename $0`
 
@@ -67,7 +67,7 @@ case "$1" in
          # Source usermods file
          . $CONFIGDIR/ObjectSpawner_usermods.sh
 
-         eval "nohup $COMMAND $CMD_OPTIONS -sasSpawnerCn \"$SPWNNAME\" -xmlconfigfile $OMRCFG -logconfigloc $CONFIGDIR/logconfig.xml ${USERMODS}> $LOGSDIR/ObjectSpawner_console_bs-ap-04.log 2>&1 &"
+         eval "nohup $COMMAND $CMD_OPTIONS -sasSpawnerCn \"$SPWNNAME\" -xmlconfigfile $OMRCFG -logconfigloc $CONFIGDIR/logconfig.xml ${USERMODS}> $LOGSDIR/ObjectSpawner_console_bs-ap-20.log 2>&1 &"
          pid=$!
          echo $pid > $CONFIGDIR/$SERVER_PID_FILE_NAME
          echo "Spawner is started (pid $pid)..."

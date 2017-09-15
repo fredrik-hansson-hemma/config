@@ -29,8 +29,8 @@ LIBNAME VALIBLA SASIOLA  TAG=hps  PORT=10010 HOST="&env-apx-04.lul.se"  SIGNER="
 LIBNAME HPS SASHDAT  PATH="/hps"  SERVER="&env-apx-04.lul.se"  INSTALL="/opt/TKGrid" ;
 */
 
-LIBNAME HPS SASHDAT  PATH="/hps"  SERVER="bs-ap-04.lul.se"  INSTALL="/opt/TKGrid" ;
-LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10010 HOST="bs-ap-04.lul.se"  SIGNER="http://bs-ap-04.lul.se:7980/SASLASRAuthorization" ;
+LIBNAME HPS SASHDAT  PATH="/hps"  SERVER="bs-ap-20.lul.se"  INSTALL="/opt/TKGrid" ;
+LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10010 HOST="bs-ap-20.lul.se"  SIGNER="http://bs-ap-20.lul.se:7980/SASLASRAuthorization" ;
 
 
 * Hämtar alla tabeller som finns i Hadoop.;
@@ -72,9 +72,9 @@ quit;
 
 proc lasr port=10010
     data=HPS.&loadtable
-    signer="http://bs-ap-04.lul.se:7980/SASLASRAuthorization"
+    signer="http://bs-ap-20.lul.se:7980/SASLASRAuthorization"
     add noclass;
-    performance host="bs-ap-04.lul.se";
+    performance host="bs-ap-20.lul.se";
 run;
 
 
