@@ -1,15 +1,25 @@
-%macro get_batchstatus();
 
-%let path=/saswork/batchrun/;
+%let path=/saswork/batchrun;
+
+* Skapar kataloger om de inte redan finns.	;
+options dlcreatedir;
+libname batchsta "&path";
+libname backup__ "&path/backup";
+options nodlcreatedir;
+libname batchsta clear;
+libname backup__ clear;
+
+
+
 %let today = %sysfunc(putn(%sysfunc(today()), yymmdd8.)); * Dagens datum i format yyyymmdd.;
 
-filename returkod "&path.returncodes.txt" ; * Returkoder från batchkörningar.;
-filename complete "&path.completejobs.html" ; * Utfil med jobb som gått klart.;
-filename error "&path.errorjobs.html" ; * Utfil med jobb som gått fel.;
-filename comp_ftv "&path.completejobs_FTV.html" ; * Utfil med jobb som gått klart (för FTV).;
-filename err_ftv "&path.errorjobs_FTV.html" ; * Utfil med jobb som gått fel (för FTV).;
-filename comp_epj "&path.completejobs_EPJ.html" ; * Utfil med jobb som gått klart (för EPJ).;
-filename err_epj "&path.errorjobs_EPJ.html" ; * Utfil med jobb som gått fel (för EPJ).;
+filename returkod "&path./returncodes.txt" ; * Returkoder från batchkörningar.;
+filename complete "&path./completejobs.html" ; * Utfil med jobb som gått klart.;
+filename error "&path./errorjobs.html" ; * Utfil med jobb som gått fel.;
+filename comp_ftv "&path./completejobs_FTV.html" ; * Utfil med jobb som gått klart (för FTV).;
+filename err_ftv "&path./errorjobs_FTV.html" ; * Utfil med jobb som gått fel (för FTV).;
+filename comp_epj "&path./completejobs_EPJ.html" ; * Utfil med jobb som gått klart (för EPJ).;
+filename err_epj "&path./errorjobs_EPJ.html" ; * Utfil med jobb som gått fel (för EPJ).;
 
 proc format lib=work;
   value batchkod
@@ -137,19 +147,22 @@ ods html close;
 ods listing;
 
 
-                 /*****************
 
+%macro get_batchstatus();
+
+
+/*****************
+* Såhär kan man skicka HTML i mailets body, istället för att bifoga html-filer. Observera att man i exemplet endast skickar "complete", inte "error".	;
 
 %let subject=test;
 
 filename outbox email
         to=("fredrik.hansson@regionuppsala.se")
         subject="&subject"
-        attach=("&path.completejobs.html" "&path.errorjobs.html")
  content_type="text/html";
 
  data _null_;
-    file myemail;
+    file outbox;
     infile complete lrecl=32767;
     input;
     put _infile_;
@@ -158,20 +171,18 @@ filename outbox email
 
  filename outbox clear;
 
+******************/
 
 
 
 
-
-
-                                   ******************/
 %if &antalerror ne 0 %then %do;
 	%let subject = Status batch - jobb i error; 
 
 	filename outbox email 
 	to=("fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se") 
 	subject="&subject"
-	attach=("&path.completejobs.html" "&path.errorjobs.html")
+	attach=("&path./completejobs.html" "&path./errorjobs.html")
  ;
 
 data _null_;
@@ -190,7 +201,7 @@ run;
 	filename outbox email 
 	to=("fredrik.hansson@regionuppsala.se" "ftv.it@lul.se") 
 	subject="&subject"
-	attach=("&path.completejobs_FTV.html" "&path.errorjobs_FTV.html")
+	attach=("&path./completejobs_FTV.html" "&path./errorjobs_FTV.html")
  ;
 
 data _null_;
@@ -205,7 +216,7 @@ run;
 	filename outbox email 
 	to=("joakim.bergquist@lul.se") 
 	subject="&subject"
-	attach=("&path.completejobs_FTV.html")
+	attach=("&path./completejobs_FTV.html")
  ;
 
 data _null_;
@@ -221,7 +232,7 @@ run;
 	to=("fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se"
   "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se") 
 	subject="&subject"
-	attach=("&path.completejobs_EPJ.html" "&path.errorjobs_EPJ.html")
+	attach=("&path./completejobs_EPJ.html" "&path./errorjobs_EPJ.html")
  ;
 
 
@@ -238,7 +249,7 @@ run;
 	to=("fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se"
   "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se") 
 	subject="&subject"
-	attach=("&path.completejobs_EPJ.html")
+	attach=("&path./completejobs_EPJ.html")
  ;
 
 data _null_;
@@ -248,31 +259,34 @@ run;
 %end;
 
 
-* Datumstämplar Returncodes.txt och flyttar till backup.;
-
-filename move pipe "mv &path.returncodes.txt &path.backup/retuncodes_&today..txt";
-
-data _null_;
-  infile move;
-run;
-
-* Skapar en ny fil Returncodes.txt.;
-
-filename create pipe "touch &path.returncodes.txt";
-
-data _null_;
-  infile create;
-run;
-
-* Ändrar rättigheter på Returncodes.txt.;
-
-filename chmod pipe "chmod 777 &path.returncodes.txt";
-
-data _null_;
-  infile chmod;
-run;
 
 %mend;
 
 %get_batchstatus;
 
+
+
+
+
+
+* Datumstämplar Returncodes.txt och flyttar till backup.;
+data _null_;
+	rc=rename("&path./returncodes.txt", "&path./backup/returncodes_&today..txt", 'FILE');
+	if rc NE 0 then put "ERROR: Något gick fel med kopieringen av &path./returncodes.txt";
+run;
+
+
+* Skapar en ny fil Returncodes.txt.;
+filename _newfile "&path./returncodes.txt";
+data _null_;
+  file _newfile;
+  put "";
+run;
+
+
+* Ändrar rättigheter på Returncodes.txt.;
+filename chmod pipe "chmod 777 &path./returncodes.txt";
+
+data _null_;
+  infile chmod;
+run;
