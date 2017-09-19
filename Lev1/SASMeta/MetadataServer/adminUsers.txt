@@ -1,0 +1,16 @@
+; This file contains a list of userids that, when connected
+; to the SAS Metadata Server, are considered Administrators
+; of the server.  Administrators have a number of special 
+; privileges including, but not limited to: 
+;     creating and deleting users
+;     starting, stopping, and pausing the server
+;     creating repositories
+; 
+; Each line of this file contains a single UserID entry.  
+; The entries may be in the following forms: 'userid', 
+; 'domain\userid', and 'userid@domain'.
+; A semicolon at the beginning of a line indicates that the line is 
+; not to be processed.
+;
+;
+*sasadm@saspw
