@@ -13,8 +13,6 @@ metaconnect='NONE'
 /* Allocation of FimObjects; */
 %let dwlib = luldw; 
 
-
-%put NOTE: Se till att katalogerna som behövs för libnamen nedan skapas automatiskt	;
 /*Specify the directory for the extracted AD data (master tables).  */
 libname adExt "&ADSyncStaging/ADExtract";
 
@@ -81,5 +79,4 @@ libname metaUpd "&ADSyncStaging/MetaUpdate";
 %let MetadataAuthDomain=DefaultAuth;
 /*** Report ***/
 %LET TODAY=%SYSFUNC(PUTN(%SYSFUNC(TODAY()), date9.));
-%put Se till att katalogen som används nedan skapas automatiskt;
 filename report "&ADSyncStaging./Logs/report_&TODAY..txt";
