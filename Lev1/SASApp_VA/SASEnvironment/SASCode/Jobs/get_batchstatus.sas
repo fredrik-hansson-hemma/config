@@ -148,6 +148,14 @@ ods listing;
 
 
 
+
+%let to_beslutstod_error	=	"fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se";
+%let to_ftv_error			=	"fredrik.hansson@regionuppsala.se" "ftv.it@lul.se";
+%let to_ftv_ok				=	"joakim.bergquist@lul.se";
+%let to_epj_error			=	"fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se" "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se";
+%let to_epj_ok 				=	"fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se" "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se";
+
+
 %macro get_batchstatus();
 
 
@@ -180,7 +188,7 @@ filename outbox email
 	%let subject = Status batch - jobb i error; 
 
 	filename outbox email 
-	to=("fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se") 
+	to=(&to_beslutstod_error) 
 	subject="&subject"
 	attach=("&path./completejobs.html" "&path./errorjobs.html")
  ;
@@ -199,7 +207,7 @@ run;
 	%let subject = Status batch Beslutsstöd - jobb i error; 
 
 	filename outbox email 
-	to=("fredrik.hansson@regionuppsala.se" "ftv.it@lul.se") 
+	to=(&to_ftv_error) 
 	subject="&subject"
 	attach=("&path./completejobs_FTV.html" "&path./errorjobs_FTV.html")
  ;
@@ -214,7 +222,7 @@ run;
 	%let subject = Status batch Beslutstöd - jobb ok!;
 
 	filename outbox email 
-	to=("joakim.bergquist@lul.se") 
+	to=(&to_ftv_ok) 
 	subject="&subject"
 	attach=("&path./completejobs_FTV.html")
  ;
@@ -229,8 +237,7 @@ run;
 	%let subject = Status batch Beslutsstöd - jobb i error; 
 
 	filename outbox email 
-	to=("fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se"
-  "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se") 
+	to=(&to_epj_error) 
 	subject="&subject"
 	attach=("&path./completejobs_EPJ.html" "&path./errorjobs_EPJ.html")
  ;
@@ -246,8 +253,7 @@ run;
 	%let subject = Status batch Beslutstöd - jobb ok!;
 
 	filename outbox email 
-	to=("fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se"
-  "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se") 
+	to=(&to_epj_ok) 
 	subject="&subject"
 	attach=("&path./completejobs_EPJ.html")
  ;
