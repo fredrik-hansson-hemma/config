@@ -33,10 +33,14 @@
 
 
 %let ADSyncPgm=/opt/sas/config/Lev1/SASApp_VA/SASEnvironment/SASCode/Jobs/ADSync;
+
+%put NOTE: Se till att katalogen nedan skapas automatiskt om den inte redan finns	;
 %let ADSyncStaging = /saswork/LUL/ADSync;
 
-%include "&ADSyncPgm/0_passwords.sas";
-%include "&ADSyncPgm/1_Settings.sas";
+
+%include "&ADSyncPgm/0_passwords.sas" /source2;
+options mprint symbolgen;
+%include "&ADSyncPgm/1_Settings.sas" /source2;
 %include "&ADSyncPgm/2_Macros.sas";
 
 /* Step 1: Extract users, groups and memberships from Active Directory */
