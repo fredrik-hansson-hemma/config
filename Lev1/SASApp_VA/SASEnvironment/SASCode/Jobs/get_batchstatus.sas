@@ -148,12 +148,19 @@ ods listing;
 
 
 
-
+/************ Tillfälligt bortkommenterat!!!
 %let to_beslutstod_error	=	"fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se";
 %let to_ftv_error			=	"fredrik.hansson@regionuppsala.se" "ftv.it@lul.se";
 %let to_ftv_ok				=	"joakim.bergquist@lul.se";
 %let to_epj_error			=	"fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se" "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se";
 %let to_epj_ok 				=	"fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se" "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se";
+*************/
+
+%let to_beslutstod_error	=	"fredrik.hansson@regionuppsala.se";
+%let to_ftv_error			=	"fredrik.hansson@regionuppsala.se";
+%let to_ftv_ok				=	"fredrik.hansson@regionuppsala.se";
+%let to_epj_error			=	"fredrik.hansson@regionuppsala.se";
+%let to_epj_ok 				=	"fredrik.hansson@regionuppsala.se";
 
 
 %macro get_batchstatus();
