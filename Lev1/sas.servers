@@ -1712,6 +1712,37 @@ MYPATH=/opt/sas/config/Lev1
  
 
 
+METADATA_SERVER_DIR="/opt/sas/config/Lev1/SASMeta/MetadataServer"
+METADATA_SERVER_LOGS="/opt/sas/config/Lev1/SASMeta/MetadataServer/Logs"
+METADATA_SERVER_CONTEXT="SASMeta"
+
+  if [ -x "$METADATA_SERVER_DIR/MetadataServer.sh" ];
+  then
+  {
+    start_metadata_server;
+    if [ "$?" -eq 0 ];
+      then
+      {
+        $Logmsg "$SASMETA1_IS_UP";
+      }
+      else
+      {
+        $Logmsg "$SASMETA1_IS_DOWN"
+        $Logmsg "$SASMETA_WONT_START_OTHERS"
+        return 1;
+      }
+    fi
+  }
+  else
+  {
+    $Logmsg "$SASMETA1_SCRIPT_ACCESS"
+    $Logmsg "$SASMETA1_IS_DOWN"
+    $Logmsg "$SASMETA_WONT_START_OTHERS"
+    return 1;    
+  }
+  fi
+
+
 OBJECT_SPAWNER_DIR="/opt/sas/config/Lev1/ObjectSpawner"
 OBJECT_SPAWNER_LOGS="/opt/sas/config/Lev1/ObjectSpawner/Logs"
 OBJECT_SPAWNER_CONTEXT="NULL"
@@ -1889,6 +1920,13 @@ OBJECT_SPAWNER_LOGS="/opt/sas/config/Lev1/ObjectSpawner/Logs"
   then stop_object_spawner; fi;
 
 
+METADATA_SERVER_DIR="/opt/sas/config/Lev1/SASMeta/MetadataServer"
+METADATA_SERVER_LOGS="/opt/sas/config/Lev1/SASMeta/MetadataServer/Logs"
+
+  if [ -x "$METADATA_SERVER_DIR/MetadataServer.sh" ];
+  then stop_metadata_server; fi;
+
+
   # Variables defined by generate_boot_scripts.sh - MUST BE ROOTED AT CHAR POSITION 1
 SCRIPT_PRE=YES
 MYPATH=/opt/sas/config/Lev1
@@ -1944,6 +1982,23 @@ MYPATH=/opt/sas/config/Lev1
   #
   # generated code follows
   #
+
+METADATA_SERVER_DIR="/opt/sas/config/Lev1/SASMeta/MetadataServer"
+
+    if [ -f "$METADATA_SERVER_DIR/$SERVER_PID_FILE_NAME" ];
+    then
+    {
+      pid=`cat "$METADATA_SERVER_DIR/$SERVER_PID_FILE_NAME"`
+      kill -0 $pid >/dev/null 2>&1
+      if [ $? -eq 0 ]; then
+         $Logmsg "$SASMETA1_IS_UP"
+      else
+         $Logmsg "$SASMETA1_IS_DOWN"
+      fi
+    }
+    else
+      $Logmsg "$SASMETA1_IS_DOWN"
+    fi
 
 OBJECT_SPAWNER_DIR="/opt/sas/config/Lev1/ObjectSpawner"
 

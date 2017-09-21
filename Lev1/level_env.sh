@@ -6,8 +6,8 @@
 #
 
 LEVEL_ROOT=/opt/sas/config/Lev1
-UTILITIES=/opt/sas/sashome/SASDeploymentManager/9.4/products/cfgwizard__94420__prt__xx__sp0__1/Utilities
-DEPLOYWIZ=/opt/sas/sashome/SASDeploymentManager/9.4/products/deploywiz__94420__prt__xx__sp0__1/deploywiz
+UTILITIES=/opt/sas/sashome/SASDeploymentManager/9.4/products/cfgwizard__94486__prt__xx__sp0__1/Utilities
+DEPLOYWIZ=/opt/sas/sashome/SASDeploymentManager/9.4/products/deploywiz__94486__prt__xx__sp0__1/deploywiz
 SAS_HOME=/opt/sas/sashome
 JAVA_JRE_COMMAND=/opt/sas/sashome/SASPrivateJavaRuntimeEnvironment/9.4/jre/bin/java
 

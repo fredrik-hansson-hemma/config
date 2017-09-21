@@ -52,7 +52,7 @@ case "$1" in
          LIBPATH=/opt/sas/sashome/SASWebInfrastructurePlatformDataServer/9.4/lib:$LIBPATH
          export LD_LIBRARY_PATH
          export LIBPATH
-         nohup $COMMAND start -D "/opt/sas/config/Lev1/WebInfrastructurePlatformDataServer/data" -o "-i -p 9432" > $LOGSDIR/_webinfdsvrc_console.log 2>&1 &
+         nohup $COMMAND start -D "/opt/sas/config/Lev1/WebInfrastructurePlatformDataServer/data" -o "-i -p 9432" > $LOGSDIR/webinfdsvrc_console.log 2>&1 &
          pid=$!
 #         echo $pid > $CONFIGDIR/data/postmaster.pid
          echo "Server is started (pid $pid)..."
@@ -70,7 +70,7 @@ case "$1" in
          LIBPATH=/opt/sas/sashome/SASWebInfrastructurePlatformDataServer/9.4/lib:$LIBPATH
          export LD_LIBRARY_PATH
          export LIBPATH
-         nohup $COMMAND stop -D "/opt/sas/config/Lev1/WebInfrastructurePlatformDataServer/data" -m f > $LOGSDIR/_webinfdsvrc_console.log 2>&1 &
+         nohup $COMMAND stop -D "/opt/sas/config/Lev1/WebInfrastructurePlatformDataServer/data" -m f > $LOGSDIR/webinfdsvrc_console.log 2>&1 &
          # give the server some time to stop before trying to remove the pid
          sleep 5
          if [ -f $CONFIGDIR/data/postmaster.pid ]; then

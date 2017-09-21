@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- NOTE: This format is subject to change without notice! -->
+
+<!-- Describes stored contracts used to test this product. -->
+
+<StoredContracts version="1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="http://www.sas.com/xml/schema/dpro/stored-contracts-1.5.xsd">
+
+	<StoredContract>
+		<dir>/opt/sas/config/Lev1/SASApp_VA/WorkspaceServer/dtest/WorkspaceServer</dir>
+		<file>SetinitTest_contract.xml</file>
+		<displayName>Workspace Server setinit Test (SASApp_VA)</displayName>
+		<keywords>
+			<keyword>SAS Test Suite</keyword>
+			<keyword>UserAndPasswordNeeded</keyword>
+		</keywords>
+		<description>Runs proc setinit to check for expired SAS products.</description>
+	</StoredContract>
+
+</StoredContracts>

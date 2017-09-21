@@ -2,7 +2,7 @@
 #
 # javabatch.sh
 #
-# Script for managing the @javabatchsrv.appserver.logical.name@
+# Script for managing the SASApp_VA - Logical SAS Java Batch Server
 #
 
 # Uncomment the set  -x to run  in debug mode

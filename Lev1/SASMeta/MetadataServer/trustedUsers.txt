@@ -1,0 +1,20 @@
+;This file contains a list of userids that are trusted to
+;obtain/free/use credential handles representing other users.  
+;A "TrustedUser" represents the UserID for a connection
+;between a client and the Open Metadata Server, where the 
+;client requires OMS Authorization Facility Credentials services.
+;For example, a Middleware Server (acting as an OMS client) 
+;commonly authenticates a user directly, obtains a
+;credential handle from the OMS Authorization Facility for this user, 
+;and then requests metadata from the OMS using the credential handle.
+;Only clients that connect to the OMS with UserIDs registered in
+;trustedUsers.txt may perform operations on behalf of other Users
+;using credential handles.
+;
+;Each line of this file contains a single UserID entry.  The entries 
+;may be in the following forms:  'userid', 'domain\userid', 'userid@domain'.
+;A semicolon at the beginning of a line indicates that the line is 
+;not to be processed.
+;
+;
+sastrust@saspw
