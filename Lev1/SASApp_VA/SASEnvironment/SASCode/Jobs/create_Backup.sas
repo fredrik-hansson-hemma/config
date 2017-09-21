@@ -4,7 +4,13 @@
 * .Spk paket skapas av foldrarna User folders, Generella rapporter, LUL, Shared data.
 *********************************************/
 
-%macro create_Backup();
+
+%put NOTE: Det här borde vara enklare att ha som ett skript direkt, istället för att gå omvägen via SAS... ;
+
+
+%* macro create_Backup();
+
+
 %put ENTER: create_Backup;
 
 %let filepath=/saswork/scripts/; * Sökväg till katalog på server där skript lagras.;
@@ -48,8 +54,11 @@ run;
 
 %put EXIT: create_Backup;
 
+
+/************
 %mend;
 
 * Exempel på anrop;
 %create_Backup();
 
+***********/
