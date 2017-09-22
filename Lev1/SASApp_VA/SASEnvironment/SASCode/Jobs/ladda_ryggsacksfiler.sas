@@ -13,6 +13,7 @@ libname pub "/opt/sas/config/Lev1/AppData/SASVisualAnalytics/VisualAnalyticsAdmi
 * VA LASR Public; 
 LIBNAME LASRLIB SASIOLA  TAG=VAPUBLIC  PORT=10031 HOST="bs-ap-20.lul.se"  SIGNER="https://bs-ap-20.lul.se:443/SASLASRAuthorization" ;
 
+
 options validvarname = any validmemname=extend;
 
 %LET VDB_GRIDHOST=bs-ap-20.lul.se;
@@ -97,7 +98,7 @@ options set=GRIDINSTALLLOC="/opt/TKGrid";
 
 
 	%if &AVBRYT_IMPORT=JA %then %do;
-		%put %str(ER)ROR: Avbryter importen av %sysfunc(pathname(&filnamn));
+		%put %str(ER)ROR: Avbryter importen av &filnamn;
 		%return;
 	%end;
 
