@@ -7,25 +7,6 @@
 ************************************/
 
 
-/* FTP mot fil */
-filename fil_a ftp "OP_O_BEH_KÄLLDATA_KALLE.TXT"		user='ASBS' pass='gM6175g' host='infr-ftp-01.lul.se';
-filename fil_b ftp "FORSTA_BESOK_KALLDATA_KALLE.TXT"	user='ASBS' pass='gM6175g' host='infr-ftp-01.lul.se';
-filename fil_c ftp "RYGGSACK_BESO.TXT"					user='ASBS' pass='gM6175g' host='infr-ftp-01.lul.se';
-filename fil_d ftp "RYGGSACK_OP.TXT"					user='ASBS' pass='gM6175g' host='infr-ftp-01.lul.se';
-
-filename fil_ut_a "/tmp/OP_O_BEH_KALLDATA_KALLE.txt";
-filename fil_ut_b "/tmp/FORSTA_BESOK_KALLDATA_KALLE.txt";
-filename fil_ut_c "/tmp/RYGGSACK_BESO.txt";
-filename fil_ut_d "/tmp/RYGGSACK_OP.txt";
-
-/* Tar bort filer på Linux */
-filename bort_a pipe "rm /tmp/OP_O_BEH_KALLDATA_KALLE.txt";
-filename bort_b pipe "rm /tmp/FORSTA_BESOK_KALLDATA_KALLE.txt";
-filename bort_c pipe "rm /tmp/RYGGSACK_BESO.txt";
-filename bort_d pipe "rm /tmp/RYGGSACK_OP.txt";
-
-
-
   
 * Data mellanlagras på Public Server;
 libname pub "/opt/sas/config/Lev1/AppData/SASVisualAnalytics/VisualAnalyticsAdministrator/PublicDataProvider";  
@@ -80,79 +61,102 @@ options set=GRIDINSTALLLOC="/opt/TKGrid";
 
 
 
-%global MINST_ETT_ERROR;
-%let MINST_ETT_ERROR=NEJ;
+%global MINST_ETT_ERR;
+%let MINST_ETT_ERR=NEJ;
 
 
 
-%macro ladda_ryggsacksfiler(fil=, fil_ut=, va_ds=);
+%macro ladda_ryggsacksfiler(filnamn=, namn_i_VA=);
 
+	%put ;
+	%put ;
+	%put ;
+	%put ;
+	%put Påbörjar inläsning av &filnamn;
+	%put ;
+	%put ;
+
+	filename fil_ftp ftp "&filnamn"	user='ASBS' pass='gM6175g' host='infr-ftp-01.lul.se';
+	filename fil_locl "/tmp/&filnamn";
+	filename fil_rm pipe "rm %sysfunc(pathname(fil_locl))";
+
+
+	%* Flagga som avgör om textfilen ska/kan importeras eller ej.	;
 	%local AVBRYT_IMPORT;
 	%let AVBRYT_IMPORT=NEJ;
 
 	%put Hämtar fil från FTP till lokal katalog	;
 	data _null_;
-		rc=fcopy("&fil", "&fil_ut.");
+		rc=fcopy("fil_ftp", "fil_locl");
 		if rc NE 0 then do;
-			put "ERROR: Något gick fel vid hämtning av fil %sysfunc(pathname(&fil)) --> %sysfunc(pathname(&fil_ut)). Returkoden blev: " rc=;
-			call symputx('MINST_ETT_ERROR', 'JA', GLOBAL);
+			put "%str(ER)ROR: Något gick fel vid hämtning av fil %sysfunc(pathname(fil_ftp)) --> %sysfunc(pathname(fil_locl)). Returkoden blev: " rc=;
+			call symputx('MINST_ETT_ERR', 'JA', GLOBAL);
 			call symputx('AVBRYT_IMPORT', 'JA', LOCAL);
 		end;
 	run;
 
 
 	%if &AVBRYT_IMPORT=JA %then %do;
-		%put ERROR: Avbryter importen av %sysfunc(pathname(&fil));
+		%put %str(ER)ROR: Avbryter importen av %sysfunc(pathname(&filnamn));
 		%return;
 	%end;
 
 
 	%put Läser in data med hjälp av proc import	;
-	proc import file=&fil_ut. out=pub.&va_ds. dbms=TAB replace;
+	proc import file=fil_locl out=pub.&namn_i_VA. dbms=TAB replace;
 		guessingrows=32767;
 	run;
 
+	
+	%put Tar bort lokal fil	;
+	data _null_;
+		infile fil_rm;
+	run;
+
+
 
 	%put Droppar existerande VA-tabell			;
-	%vdb_dt(LASRLIB.&va_ds.);
+	%vdb_dt(LASRLIB.&namn_i_VA.);
 
 	%put Laddar upp tabellen i lasr-libnamet	;
-	data LASRLIB.&va_ds.;
-		set PUB.&va_ds.;
+	data LASRLIB.&namn_i_VA.;
+		set PUB.&namn_i_VA.;
 	run;	
 
 	%put Registrerar tabellen i Metadata		;
 	%registerTable(
 					LIBRARY=%nrstr(/Shared Data/SAS Visual Analytics/Public/Visual Analytics Public LASR)
 					, REPOSITORY=%nrstr(Foundation)
-					, TABLE=&va_ds.
+					, TABLE=&namn_i_VA.
 					, FOLDER=%nrstr(/LUL/Tillgänglighet/Data)
 					);
 
-%mend;
- 
-%ladda_ryggsacksfiler(fil=fil_a, fil_ut=fil_ut_a, va_ds=OP_O_BEH_KALLDATA_V2);
-%ladda_ryggsacksfiler(fil=fil_b, fil_ut=fil_ut_b, va_ds=FORSTA_BESOK_KALLDATA_V2);
-%ladda_ryggsacksfiler(fil=fil_c, fil_ut=fil_ut_c, va_ds=RYGGSACK_BESO_V2);
-%ladda_ryggsacksfiler(fil=fil_d, fil_ut=fil_ut_d, va_ds=RYGGSACK_OP_V2);
+	%put Släpper filenames	;
+	filename fil_ftp clear;
+	filename fil_locl clear;
+	filename fil_rm clear;
 
-
-/* Tar bort fil på Linux. */
-
-data _null_;
-	infile bort_a;
-	infile bort_b;
-	infile bort_c;
-	infile bort_d;
-run;
-;
+%mend ladda_ryggsacksfiler;
 
 
 
 
-%* Ser till att programmet avslutas med en felkod om MINST_ETT_ERROR=JA	;
+%ladda_ryggsacksfiler(	filnamn=OP_O_BEH_KÄLLDATA_KALLE.TXT,
+						namn_i_VA=OP_O_BEH_KALLDATA_V2);
+%ladda_ryggsacksfiler(	filnamn=FORSTA_BESOK_KALLDATA_KALLE.TXT,
+						namn_i_VA=FORSTA_BESOK_KALLDATA_V2);
+%ladda_ryggsacksfiler(	filnamn=RYGGSACK_BESO.TXT,
+						namn_i_VA=RYGGSACK_BESO_V2);
+%ladda_ryggsacksfiler(	filnamn=RYGGSACK_OP.TXT,
+						namn_i_VA=RYGGSACK_OP_V2);
+
+
+
+
+
+%* Ser till att programmet avslutas med en felkod om MINST_ETT_ERR=JA	;
 %macro check_for_errors;
-	%if &MINST_ETT_ERROR=JA %then %abort abend;
+	%if &MINST_ETT_ERR=JA %then %abort abend;
 %mend check_for_errors;
 
 %check_for_errors
