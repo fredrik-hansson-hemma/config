@@ -36,3 +36,6 @@ rc=$?
 #fi
 dt=`date +%Y%m%d`
 echo "/opt/sas/config/Lev1/SASApp_VA/BatchServer/sasbatch.sh" "$@" "Retur:"$rc "Datum:"$dt>> /saswork/batchrun/returncodes.txt 
+
+# Ett litet trick för att skriptet ska returnera SAS-programmets returkod
+(exit $rc)
