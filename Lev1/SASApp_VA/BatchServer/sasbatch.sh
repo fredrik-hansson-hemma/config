@@ -35,7 +35,11 @@ rc=$?
 #  rc=0
 #fi
 dt=`date +%Y%m%d`
-echo "/opt/sas/config/Lev1/SASApp_VA/BatchServer/sasbatch.sh" "$@" "Retur:"$rc "Datum:"$dt>> /saswork/batchrun/returncodes.txt 
+echo "/opt/sas/config/Lev1/SASApp_VA/BatchServer/sasbatch.sh" "$@" "Retur:"$rc "Datum:"$dt>> /saswork/batchrun/returncodes.txt
+
+# Raden ovan kanske borde ersättas med raden nedan för att få med alla USERMODS_OPTIONS-arrayen
+# Vågar inte ändra nu precis före produktionssättning av nya miljön. Vi tar det i januari 2018.
+# echo "$SAS_COMMAND" -noxcmd -lrecl 32767 "$@" "${USERMODS_OPTIONS[@]}" "Retur:"$rc "Datum:"$dt>> /saswork/batchrun/returncodes.txt
 
 # Ett litet trick för att skriptet ska returnera SAS-programmets returkod
 (exit $rc)
