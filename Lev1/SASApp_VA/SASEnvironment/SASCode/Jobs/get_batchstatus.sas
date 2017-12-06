@@ -31,23 +31,29 @@ proc format lib=work;
  run;
 
 * Hämtar sas-program och returkod från filen Returncodes.txt.;
-data tmp1 (keep=returncode program date);
-	attrib txt length=$400; 
+data tmp1(keep=returncode program date);
+	attrib txt length=$400;
 	attrib rc length=$10;
-	attrib returncode length=8.; 
-	attrib program length=$40;
-	attrib date length=8 informat=yymmdd8. format=yymmdd10.; 
- 	infile returkod ls=400 truncover termstr=nl dlm=':';
+	attrib returncode length=8.;
+	attrib program length=$256;
+	attrib date length=8 informat=yymmdd8. format=yymmdd10.;
+	infile returkod ls=4000 truncover termstr=nl dlm=':';
 	input txt rc date;
+
+	* date=input(compress(date_string, "Datum:"), yymmdd8.);
 	* förutsätter att batchkommandot har med -sysin;
 	index = index(txt, '-sysin');
+
 	* hämtar namnet på sas-programmet, förutsätter att det står sist i batchkommandot.;
 	stage = scan(reverse(substr(txt, index)), 1, '/');
 	stage2 = left(reverse(stage));
-  program = scan(stage2, 1, ' ');
-  * rensar rc från skräptecken och gör om till numeriskt värde.;
-	returncode =input(scan(rc,1,' '), best8.); 
+	program = scan(stage2, 1, ' ');
+
+	* rensar rc från skräptecken och gör om till numeriskt värde.;
+	returncode =input(scan(rc,1,' '), best8.);
 run;
+
+
 
 proc sort data=tmp1 out=tmp2 nodupkey;
   by program descending date returncode;
@@ -149,7 +155,7 @@ ods listing;
 
 
 /************ Tillfälligt bortkommenterat!!!
-%let to_beslutstod_error	=	"fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se";
+%let to_beslutstod_error	=	"fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se" "karl.alvtorn@regionuppsala.se";
 %let to_ftv_error			=	"fredrik.hansson@regionuppsala.se" "ftv.it@lul.se";
 %let to_ftv_ok				=	"joakim.bergquist@lul.se";
 %let to_epj_error			=	"fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se" "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se";
@@ -293,7 +299,6 @@ run;
 filename _newfile "&path./returncodes.txt";
 data _null_;
   file _newfile;
-  put "";
 run;
 
 
