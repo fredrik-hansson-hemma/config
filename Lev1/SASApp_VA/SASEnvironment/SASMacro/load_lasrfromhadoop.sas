@@ -19,18 +19,18 @@
 %let env = %get_env();
 
 %LET VDB_GRIDHOST=&env.-apx-04.lul.se;
-%LET VDB_GRIDINSTALLLOC=/opt/TKGrid;
+%LET VDB_GRIDINSTALLLOC=/opt/sas/TKGrid;
 options set=GRIDHOST="&env-apx-04.lul.se";
-options set=GRIDINSTALLLOC="/opt/TKGrid";
+options set=GRIDINSTALLLOC="/opt/sas/TKGrid";
 options validvarname=any validmemname=extend;
 
 /*
-LIBNAME VALIBLA SASIOLA  TAG=hps  PORT=10010 HOST="&env-apx-04.lul.se"  SIGNER="http://&env-apx-04.lul.se:7980/SASLASRAuthorization" ;
-LIBNAME HPS SASHDAT  PATH="/hps"  SERVER="&env-apx-04.lul.se"  INSTALL="/opt/TKGrid" ;
+LIBNAME VALIBLA SASIOLA  TAG=hps  PORT=10011 HOST="&env-apx-04.lul.se"  SIGNER="http://&env-apx-04.lul.se:7980/SASLASRAuthorization" ;
+LIBNAME HPS SASHDAT  PATH="/hps"  SERVER="&env-apx-04.lul.se"  INSTALL="/opt/sas/TKGrid" ;
 */
 
-LIBNAME HPS SASHDAT  PATH="/hps"  SERVER="bs-ap-20.lul.se"  INSTALL="/opt/TKGrid" ;
-LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10010 HOST="bs-ap-20.lul.se"  SIGNER="http://bs-ap-20.lul.se:7980/SASLASRAuthorization" ;
+LIBNAME HPS SASHDAT  PATH="/hps"  SERVER="bs-ap-20.lul.se"  INSTALL="/opt/sas/TKGrid" ;
+LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10011 HOST="bs-ap-20.lul.se"  SIGNER="http://bs-ap-20.lul.se:7980/SASLASRAuthorization" ;
 
 
 * Hämtar alla tabeller som finns i Hadoop.;
@@ -70,7 +70,7 @@ quit;
 %let loadtable=%upcase(%sysfunc(getvarc(&dsid,%sysfunc(varnum(&dsid,memname)))));
 %put LOADTABLE= &loadtable;
 
-proc lasr port=10010
+proc lasr port=10011
     data=HPS.&loadtable
     signer="http://bs-ap-20.lul.se:7980/SASLASRAuthorization"
     add noclass;

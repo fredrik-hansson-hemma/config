@@ -11,7 +11,7 @@
 
 	%mend;
 
-  %stoppaLASR(port=10010); * LASR Analytic Server;
+  %stoppaLASR(port=10011); * LASR Analytic Server;
 	%stoppaLASR(port=10031); * Public LASR;
 	%stoppaLASR(port=10015); * EPJ;
 	%stoppaLASR(port=10016); * LRC;

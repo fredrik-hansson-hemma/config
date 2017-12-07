@@ -10,14 +10,14 @@
       tablemem=80
       ;
       performance host="bs-ap-20.lul.se"
-      install="/opt/TKGrid"
+      install="/opt/sas/TKGrid"
       nodes=ALL
       ;
     run;
 
 	%mend;
 
-  %startaLASR(port=10010); * LASR Analytic Server;
+  %startaLASR(port=10011); * LASR Analytic Server;
 	%startaLASR(port=10031); * Public LASR;
 	%startaLASR(port=10015); * EPJ;
 	%startaLASR(port=10016); * LRC;

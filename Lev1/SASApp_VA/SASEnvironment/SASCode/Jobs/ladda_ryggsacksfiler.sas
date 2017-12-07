@@ -17,9 +17,9 @@ LIBNAME LASRLIB SASIOLA  TAG=VAPUBLIC  PORT=10031 HOST="bs-ap-20.lul.se"  SIGNER
 options validvarname = any validmemname=extend;
 
 %LET VDB_GRIDHOST=bs-ap-20.lul.se;
-%LET VDB_GRIDINSTALLLOC=/opt/TKGrid;
+%LET VDB_GRIDINSTALLLOC=/opt/sas/TKGrid;
 options set=GRIDHOST="bs-ap-20.lul.se";
-options set=GRIDINSTALLLOC="/opt/TKGrid";
+options set=GRIDINSTALLLOC="/opt/sas/TKGrid";
 
 
 
