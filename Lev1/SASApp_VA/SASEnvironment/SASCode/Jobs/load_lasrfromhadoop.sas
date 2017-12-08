@@ -70,10 +70,10 @@
 		%put LOADTABLE= &loadtable;
 
 		proc lasr port=&port.
-		  data=HADOOP.&loadtable
-		  signer="&signer"
-		  add noclass;
-    performance host="bs-ap-20.lul.se";
+			data=HADOOP.&loadtable
+			signer="&signer"
+			add noclass;
+    		performance host="bs-ap-20.lul.se";
 		run;
 
 	%end;
@@ -92,8 +92,50 @@
 %mend;
 
 
-* Anrop;
-%load_lasrfromhadoop(VATABLE=, TAG=hps, PATH=/hps, PORT=10011, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization); 
+
+* ===============================================================================	;
+* Verkar inte alltid vara nödvändigt, men kan behövas för att slippa
+* "ER ROR: Unable to connect to Metadata Server"
+* ===============================================================================	;
+options metaserver="bs-ap-20.lul.se"
+	metaport=8561
+	metauser="sasadm@saspw"
+	metapass="{sas002}7D55EB1F27B29BC354FD035416238B741C2BF86732381F40"
+	metarepository="Foundation";
+
+
+* mprint underlättar copy-paste från loggen om man skulle behöva köra om något	;
+options mprint;
+
+* Anrop	;
+%load_lasrfromhadoop(VATABLE=, TAG=hps, PATH=/hps, PORT=10011, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
 %load_lasrfromhadoop(VATABLE=, TAG=epj, PATH=/epj, PORT=10015, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
 %load_lasrfromhadoop(VATABLE=, TAG=lrc, PATH=/lrc, PORT=10016, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
 %load_lasrfromhadoop(VATABLE=, TAG=ftv, PATH=/ftv, PORT=10017, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
+
+
+
+
+
+
+
+* ===============================================================================	;
+* Hårdkodat för att köra en enskild tabell
+* ===============================================================================	;
+/*
+%let VATABLE=lul_kvalitet_levnadsvanor_pv;
+%let TAG=hps;
+%let PATH=/hps;
+%let PORT=10011;
+%let SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization;
+
+LIBNAME LASR SASIOLA  TAG=&tag  PORT=&port HOST="bs-ap-20.lul.se"  SIGNER="&signer";
+LIBNAME HADOOP SASHDAT  PATH="&path"  SERVER="bs-ap-20.lul.se"  INSTALL="/opt/sas/TKGrid";
+
+proc lasr port=&port
+	data=HADOOP.&VATABLE
+	signer="&signer"
+	add noclass;
+	performance host="bs-ap-20.lul.se";
+run;
+*********/
