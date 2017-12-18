@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <logging:configuration xmlns:logging="http://www.sas.com/xml/logging/1.0/">
 
+   <!-- Rolling log file with default rollover of midnight -->
+   <appender class="RollingFileAppender" name="TimeBasedRollingFile">
+      <param name="Append" value="false"/>
+      <param name="Unique" value="true"/>
+      <param name="ImmediateFlush" value="true"/>      
+      <rollingPolicy class="TimeBasedRollingPolicy">
+         <param name="FileNamePattern" value="/opt/sas/config/Lev1/SASApp_VA/WorkspaceServer/Logs/SASAppVA_WorkspaceServer_%d_%S{hostname}_%S{pid}.log"/>
+         <param name="rollOver" value="false"/>
+      </rollingPolicy>
+      <layout>
+         <!--
+         <param name="HeaderPattern" value="Host: '%S{hostname}', OS: '%S{os_family}', Release: '%S{os_release}', SAS Version: '%S{sup_ver_long2}', Command: '%S{startup_cmd}'"/>
+         -->
+         <param name="ConversionPattern" value="%d %-5p [%t] %X{Client.ID}:%u - %m"/>
+      </layout>
+   </appender>
+
    <!-- Unix System Facility Appender, emits events to the Unix system log -->
    <appender name="UnixSysLog" class="UNXFacilityAppender">
       <param name="facility" value="syslog"/>
@@ -65,7 +82,13 @@ _ENDDISARM
       </layout>
    </appender>
 
-
+<!--
+<appender class="ConsoleAppender" name="console">
+  <layout>
+    <param name="ConversionPattern" value="%d %-5p [%t] %u - %m"/>
+  </layout>
+<appender>
+-->
    <!-- Caution: Do NOT edit or change this appender configuration        -->
    <!-- Performance ARM Appender -->   
    <appender name="ARM" class="ARMAppender">  
@@ -75,6 +98,12 @@ _ENDDISARM
       <appender-ref ref="WSLogAppender"/>
    </appender>
  
+   <!-- Logging Facility logger -->
+   <logger name="App.Program">
+       <level value="Debug"/>
+       <appender-ref ref="TimeBasedRollingFile"/>
+   </logger>
+   
    <!-- Caution: Do NOT edit or change this logger configuration          -->
    <!-- Performance ARM message logger -->   
    <logger name="Perf.ARM" additivity="false">
