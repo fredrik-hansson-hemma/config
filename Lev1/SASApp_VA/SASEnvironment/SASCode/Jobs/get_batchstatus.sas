@@ -32,7 +32,7 @@ proc format lib=work;
 
 * Hämtar sas-program och returkod från filen Returncodes.txt.;
 data tmp1(keep=returncode program date);
-	attrib txt length=$400;
+	attrib txt length=$2000;
 	attrib rc length=$10;
 	attrib returncode length=8.;
 	attrib program length=$256;
@@ -51,7 +51,18 @@ data tmp1(keep=returncode program date);
 
 	* rensar rc från skräptecken och gör om till numeriskt värde.;
 	returncode =input(scan(rc,1,' '), best8.);
+
+	/******* Alternativt sätt att ta fram programnamnet
+	* Sparar regular expression	;
+	re = prxparse("/\/\w+\.sas/");
+	* Hittar programnamnets position	;
+	position=prxmatch(re, txt);
+
+	programnamnX=substr(txt,position+1,index(txt, ".sas")+3-position);
+	*********************/
+
 run;
+
 
 
 
