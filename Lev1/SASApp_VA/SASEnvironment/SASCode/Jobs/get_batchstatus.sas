@@ -154,131 +154,111 @@ ods listing;
 
 
 
-/************ Tillfälligt bortkommenterat!!!
 %let to_beslutstod_error	=	"fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se" "karl.alvtorn@regionuppsala.se";
 %let to_ftv_error			=	"fredrik.hansson@regionuppsala.se" "ftv.it@lul.se";
 %let to_ftv_ok				=	"joakim.bergquist@lul.se";
 %let to_epj_error			=	"fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se" "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se";
 %let to_epj_ok 				=	"fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se" "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se";
-*************/
-
-%let to_beslutstod_error	=	"fredrik.hansson@regionuppsala.se";
-%let to_ftv_error			=	"fredrik.hansson@regionuppsala.se";
-%let to_ftv_ok				=	"fredrik.hansson@regionuppsala.se";
-%let to_epj_error			=	"fredrik.hansson@regionuppsala.se";
-%let to_epj_ok 				=	"fredrik.hansson@regionuppsala.se";
 
 
 %macro get_batchstatus();
 
+	%if &antalerror ne 0 %then %do;
+		%let subject = Status batch - jobb i error;
+		filename outbox email 
+			to=(&to_beslutstod_error) 
+			subject="&subject"
+			attach=("&path./completejobs.html" "&path./errorjobs.html")
+		;
 
-/*****************
-* Såhär kan man skicka HTML i mailets body, istället för att bifoga html-filer. Observera att man i exemplet endast skickar "complete", inte "error".	;
-
-%let subject=test;
-
-filename outbox email
-        to=("fredrik.hansson@regionuppsala.se")
-        subject="&subject"
- content_type="text/html";
-
- data _null_;
-    file outbox;
-    infile complete lrecl=32767;
-    input;
-    put _infile_;
- run;
+		data _null_;
+			file outbox;
+			put "Status från batchkörning &today.";
+		run;
 
 
- filename outbox clear;
+		***************************************************************************;
+		* Såhär kan man skicka HTML i mailets body, istället för att bifoga html-filer. Observera att man i exemplet endast skickar "error", inte "complete".	;
+		***************************************************************************;
+		filename outbox email
+			to=("fredrik.hansson@regionuppsala.se")
+			subject="&subject"
+			content_type="text/html";
 
-******************/
+		data _null_;
+		  file outbox;
+		  infile error lrecl=32767;
+		  input;
+		  put _infile_;
+		run;
 
+		filename outbox clear;
+		***************************************************************************;
+		* Slut på test av HTML-mail.	;
+		***************************************************************************;
 
+	%end;
+	%else %do;
+		%let subject = Status batch - jobb ok!;
+	%end;
 
+	%if &antalerror_ftv ne 0 %then %do;
+		%let subject = Status batch Beslutsstöd - jobb i error;
+		filename outbox email 
+			to=(&to_ftv_error) 
+			subject="&subject"
+			attach=("&path./completejobs_FTV.html" "&path./errorjobs_FTV.html")
+		;
 
-%if &antalerror ne 0 %then %do;
-	%let subject = Status batch - jobb i error; 
+		data _null_;
+			file outbox;
+			put "Status från batchkörning &today.";
+		run;
 
-	filename outbox email 
-	to=(&to_beslutstod_error) 
-	subject="&subject"
-	attach=("&path./completejobs.html" "&path./errorjobs.html")
- ;
+	%end;
+	%else %do;
+		%let subject = Status batch Beslutstöd - jobb ok!;
+		filename outbox email 
+			to=(&to_ftv_ok) 
+			subject="&subject"
+			attach=("&path./completejobs_FTV.html")
+		;
 
-data _null_;
-  file outbox;
-	 put "Status från batchkörning &today.";
-run;
+		data _null_;
+			file outbox;
+			put "Status från batchkörning &today.";
+		run;
 
-%end;
-%else %do;
-	%let subject = Status batch - jobb ok!;
-%end;
+	%end;
 
-%if &antalerror_ftv ne 0 %then %do;
-	%let subject = Status batch Beslutsstöd - jobb i error; 
+	%if &antalerror_epj ne 0 %then %do;
+		%let subject = Status batch Beslutsstöd - jobb i error;
+		filename outbox email 
+			to=(&to_epj_error) 
+			subject="&subject"
+			attach=("&path./completejobs_EPJ.html" "&path./errorjobs_EPJ.html")
+		;
 
-	filename outbox email 
-	to=(&to_ftv_error) 
-	subject="&subject"
-	attach=("&path./completejobs_FTV.html" "&path./errorjobs_FTV.html")
- ;
+		data _null_;
+			file outbox;
+			put "Status från batchkörning &today.";
+		run;
 
-data _null_;
-  file outbox;
-	 put "Status från batchkörning &today.";
-run;
+	%end;
+	%else %do;
+		%let subject = Status batch Beslutstöd - jobb ok!;
+		filename outbox email 
+			to=(&to_epj_ok) 
+			subject="&subject"
+			attach=("&path./completejobs_EPJ.html")
+		;
 
-%end;
-%else %do;
-	%let subject = Status batch Beslutstöd - jobb ok!;
+		data _null_;
+			file outbox;
+			put "Status från batchkörning &today.";
+		run;
 
-	filename outbox email 
-	to=(&to_ftv_ok) 
-	subject="&subject"
-	attach=("&path./completejobs_FTV.html")
- ;
-
-data _null_;
-  file outbox;
-	 put "Status från batchkörning &today.";
-run;
-%end;
-
-%if &antalerror_epj ne 0 %then %do;
-	%let subject = Status batch Beslutsstöd - jobb i error; 
-
-	filename outbox email 
-	to=(&to_epj_error) 
-	subject="&subject"
-	attach=("&path./completejobs_EPJ.html" "&path./errorjobs_EPJ.html")
- ;
-
-
-data _null_;
-  file outbox;
-	 put "Status från batchkörning &today.";
-run;
-
-%end;
-%else %do;
-	%let subject = Status batch Beslutstöd - jobb ok!;
-
-	filename outbox email 
-	to=(&to_epj_ok) 
-	subject="&subject"
-	attach=("&path./completejobs_EPJ.html")
- ;
-
-data _null_;
-  file outbox;
-	 put "Status från batchkörning &today.";
-run;
-%end;
-
-
-
+	%end;
 %mend;
 
 %get_batchstatus;
