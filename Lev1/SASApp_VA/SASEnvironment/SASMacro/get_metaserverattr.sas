@@ -27,6 +27,7 @@ proc format;
   ;
 
 run;
+quit;
 
 %mend;
 
