@@ -9,6 +9,14 @@
 %macro load_lasrfromhadoop(VATABLE=, TAG=, PATH=, PORT=, SIGNER=);
 	%put ENTER: load_lasrfromhadoop;
 
+	%put &=VATABLE;
+	%put &=TAG;
+	%put &=PATH;
+	%put &=PORT;
+	%put &=SIGNER;
+
+
+
 	%if "VATABLE" = "" %then %do;
 		%put Alla tabeller från Hadoop kommer att laddas in i LASR-minnet.;
 	%end;
@@ -26,48 +34,78 @@
 	proc printto print='/tmp/procoutput.lst';
 	run;
 
-	* Olika Signer per LASR-server.;
+
+	%* Olika Signer per LASR-server.;
 	LIBNAME LASR SASIOLA  TAG=&tag  PORT=&port HOST="bs-ap-20.lul.se"  SIGNER="&signer";
 	LIBNAME HADOOP SASHDAT  PATH="&path"  SERVER="bs-ap-20.lul.se"  INSTALL="/opt/sas/TKGrid";
 
-	* Hämtar alla tabeller som finns i Hadoop.;
-	proc sql noprint;
-		create table hadooptables as
-		select memname from dictionary.tables
-		where upcase(libname) = "HADOOP"
-		%if "&vatable" ne "" %then %do;
-			and upcase(memname) = "&vatable"
-		%end;
-	;
+	
+
+	* Hämtar alla tabeller som finns i Hadoop.																		;
+	%* Det här skulle kunna gå att göra mycket enklare med hjälp av en SQL mot dictionary.tables, men det ta		;
+	%* av någon anledning väldigt lång tid att köra en sådan fråga i vår miljö. 									;
+	ods output Members=work.hadooptables;
+	proc datasets library=hadoop memtype=data;
+	run;
 	quit;
+	ods _all_ close;
+
+
+	data work.hadooptables(rename=(name=memname));
+		%* Sätter längden till 32 för att vara säker på att få samma längd som i lasrtables	;
+		length name $32;
+		set work.hadooptables(keep=name);
+		%if "&vatable" ne "" %then %do;
+			where upcase(name) = "&vatable"
+		%end;
+	run;
+
+
 
 	* Hämtar alla tabeller som finns i LASR servern.;
-	proc sql noprint;
-		create table lasrtables as
-		select memname from dictionary.tables
-		where upcase(libname) = "LASR"
-		%if "&vatable" ne "" %then %do;
-			and upcase(memname) = "&vatable"
-		%end;
-	;
+	ods output Members=work.lasrtables;
+	proc datasets library=LASR memtype=data;
+	run;
 	quit;
+	ods _all_ close;
 
+	data work.lasrtables(rename=(name=memname));
+		length name $32;
+		set work.lasrtables(keep=name);
+		%if "&vatable" ne "" %then %do;
+			where upcase(name) = "&vatable"
+		%end;
+	run;
+
+
+
+	%local antal_tabeller;
 	* Sparar de tabeller som finns i Hadoop och som inte finns i LASR servern.;
 	proc sql noprint;
-
-		create table loadtablesfromhadoop as
+		create table loadtablesfromhadoop_&tag as
 		select hadoop.memname
 		from hadooptables as hadoop
 		where hadoop.memname not in (select memname from lasrtables);
 	quit;
 
-	%let dsid = %sysfunc(open(loadtablesfromhadoop));
+	%let antal_tabeller=&SQLOBS;
 
+
+	%let dsid = %sysfunc(open(loadtablesfromhadoop_&tag));
+
+	* Räknare för att kunna ge en lite indikation åt en stressad SAS-admin	;
+	%local tabell_nr;
+	%let tabell_nr=0;
 
 	%do %while ((%sysfunc(fetch(&dsid))) = 0);
-
+		
+		%let tabell_nr=%eval(&tabell_nr+1);
+		
 		%let loadtable=%upcase(%sysfunc(getvarc(&dsid,%sysfunc(varnum(&dsid,memname)))));
-		%put LOADTABLE= &loadtable;
+		%put NOTE: ======= Laddar tabellen &loadtable som är nummer &tabell_nr av totalt &antal_tabeller i Hadoop-katalogen "&PATH".;
+
+		%* Om man först vill radera tabellen (ska aldrig behövas, eftersom programmet endast laddar tabeller som inte fredan finns i LASR-minnet)	;
+		%* vdb_dt(LASR.&loadtable);
 
 		proc lasr port=&port.
 			data=HADOOP.&loadtable
@@ -89,7 +127,9 @@
 
 	%put EXIT: load_lasrfromhadoop_bst;
 
-%mend;
+%mend load_lasrfromhadoop;
+
+
 
 
 
@@ -108,12 +148,10 @@ options metaserver="bs-ap-20.lul.se"
 options mprint;
 
 * Anrop	;
-%load_lasrfromhadoop(VATABLE=, TAG=hps, PATH=/hps, PORT=10011, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
-%load_lasrfromhadoop(VATABLE=, TAG=epj, PATH=/epj, PORT=10015, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
-%load_lasrfromhadoop(VATABLE=, TAG=lrc, PATH=/lrc, PORT=10016, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
-%load_lasrfromhadoop(VATABLE=, TAG=ftv, PATH=/ftv, PORT=10017, SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization);
-
-
+%load_lasrfromhadoop(VATABLE=, TAG=hps, PATH=/hps, PORT=10011, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=epj, PATH=/epj, PORT=10015, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=lrc, PATH=/lrc, PORT=10016, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=ftv, PATH=/ftv, PORT=10017, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
 
 
 
@@ -127,7 +165,7 @@ options mprint;
 %let TAG=hps;
 %let PATH=/hps;
 %let PORT=10011;
-%let SIGNER=https://bs-ap-20.lul.se:443/SASLASRAuthorization;
+%let SIGNER=https://rapport.lul.se:443/SASLASRAuthorization;
 
 LIBNAME LASR SASIOLA  TAG=&tag  PORT=&port HOST="bs-ap-20.lul.se"  SIGNER="&signer";
 LIBNAME HADOOP SASHDAT  PATH="&path"  SERVER="bs-ap-20.lul.se"  INSTALL="/opt/sas/TKGrid";
