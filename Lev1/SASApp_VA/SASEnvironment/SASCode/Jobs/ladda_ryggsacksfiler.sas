@@ -94,6 +94,9 @@ options set=GRIDINSTALLLOC="/opt/sas/TKGrid";
 			call symputx('MINST_ETT_ERR', 'JA', GLOBAL);
 			call symputx('AVBRYT_IMPORT', 'JA', LOCAL);
 		end;
+		else do;
+			put "Överföringen lyckades!";
+		end;
 	run;
 
 
