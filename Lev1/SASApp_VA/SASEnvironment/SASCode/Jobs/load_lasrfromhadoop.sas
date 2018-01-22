@@ -62,6 +62,12 @@
 
 
 
+	%* Skapar en tom LASR-tabell för att slippa få felmeddelande om 
+	%* ingen tabell skapas av proc datasets nedan (för att det inte finns några LASR-tabeller).		;
+	data work.lasrtables(rename=(memname=name));
+		work.hadooptables(OBS=0);
+	run;
+
 	* Hämtar alla tabeller som finns i LASR servern.;
 	ods output Members=work.lasrtables;
 	proc datasets library=LASR memtype=data;
