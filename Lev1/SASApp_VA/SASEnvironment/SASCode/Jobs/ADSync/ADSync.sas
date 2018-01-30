@@ -34,12 +34,16 @@
 
 %let ADSyncPgm=/opt/sas/config/Lev1/SASApp_VA/SASEnvironment/SASCode/Jobs/ADSync;
 
-%put NOTE: Se till att katalogen nedan skapas automatiskt om den inte redan finns	;
+* Ser till att katalogen nedan skapas automatiskt om den inte redan finns	;
+options dlcreatedir;
+libname create "/saswork/LUL";
+libname create "/saswork/LUL/ADSync";
+libname create clear;
 %let ADSyncStaging = /saswork/LUL/ADSync;
 
 
 %include "&ADSyncPgm/0_passwords.sas" /source2;
-options mprint symbolgen;
+options nomprint nosymbolgen;
 %include "&ADSyncPgm/1_Settings.sas" /source2;
 %include "&ADSyncPgm/2_Macros.sas";
 
