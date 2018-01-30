@@ -1,13 +1,17 @@
 /* Specify target metadata server connection details */
 * Lösenordet för sasadm@saspw är satt i programmet 0_passwords.sas	;
-options metaserver='bs-ap-20.lul.se'
-metaport=8561
-metaprotocol='bridge'
-metauser='sasadm@saspw'
-metapass=&metapass
-metarepository='Foundation'
-metaconnect='NONE'
-;
+
+* Hämtar namnet på metadataservern från properties-filen (eftersom det beror på vilken maskin vi kör på)	;
+%get_property(property=metaserver)
+options
+	metaserver="&metaserver"
+	metaport=8561
+	metaprotocol='bridge'
+	metauser='sasadm@saspw'
+	metapass=&metapass
+	metarepository='Foundation'
+	metaconnect='NONE'
+	;
 
 
 /* Allocation of FimObjects; */
