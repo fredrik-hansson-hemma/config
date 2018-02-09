@@ -32,6 +32,7 @@ LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10011 HOST="&lasrserver"  SIGNER="https:/
 * Skapa datastegsvy som läser från filenamet	;
 options validvarname = any validmemname=extend;
 
+/******* Första försöket. Textfiler. Onödigt eftersom UCR också kör SAS.	*******
 filename infil "/opt/sas/RU_Utitlities/UCR-data/&FilAttLasaIn";
 
 %put Läser in data med hjälp av proc import																	;
@@ -42,9 +43,19 @@ proc import file=infil out=hps.&MalTabell dbms=dlm replace;
 	* Undersöker bredd och typ för de 2 milj första raderna (MAX=2 147 483 647)		;
 	GUESSINGROWS=2000000;
 run;
+/***********************************************************************************/
 
+* Skapar libname till swedeheart-filerna	;
+libname swedehea "/opt/sas/RU_Utitlities/UCR-data/";
+proc format cntlin=swedehea.sysformat library=work;
+quit;
+proc format cntlin=swedehea.userformat library=work;
+quit;
 
-
+* Läser in data i Hadoop ;
+data hps.&MalTabell(REPLACE=YES);
+	set swedehea.&MalTabell;
+run;
 
 
 * Raderar metadata
@@ -102,4 +113,12 @@ proc metalib;
 	select ("&MalTabell");
 run;
 
+* Något i programmet är inte ordentligt avslutat. Lägger in en quit för att åtgärda...	;
+quit;
 
+
+
+
+* Radera filerna från lokala disken ;
+
+* Radera filerna från SFTP-servern	;
