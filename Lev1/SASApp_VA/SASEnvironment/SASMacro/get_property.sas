@@ -8,6 +8,9 @@
 %macro get_property(propertyfile=/opt/sas/RU_Utitlities/properties/server.properties /* Den här parametern bör aldrig behöva användas i anropet. Lägger till den ändå just in case...*/,
 					property=);
 
+
+	%put Macro get_property: Hämtar propertyn &property från filen &propertyfile;
+	options nonotes;
 	filename properti "&propertyfile";
 
 	data _null_;
@@ -23,7 +26,7 @@
 		if upcase(property)="%upcase(&property)" then do;
 			* Lagra värdet i en global macrovariabel som heter som propertyn.	;
 			call symputx("&property", value, 'G');
-			put "NOTE: Sätter följande globala macrovariabel: %upcase(&property)=" value;
+			put "Macro get_property: Sätter följande globala macrovariabel: %upcase(&property)=" value;
 			put ;
 			* Avsluta därefter datasteget.										;
 			stop;
@@ -37,6 +40,9 @@
 		put "%STR(ER)ROR: Kunde inte hitta propertien ""&property"" i &propertyfile";
 
 	run;
+
+	%* Återställer notes	;
+	options notes;
 
 %mend get_property;
 
