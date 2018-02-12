@@ -8,7 +8,7 @@
 
 
 
-
+* Ansluter till standard-lasr-servern (den som används för centrala beslutsstöds data) samt till tillhörande Hadoop-instans.	;
 LIBNAME HPS SASHDAT  PATH="/hps"  SERVER="&hadoopserver"  INSTALL=" /opt/sas/TKGrid";
 LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10011 HOST="&lasrserver"  SIGNER="https://&lasrserver:&lasr_signer_port/SASLASRAuthorization";
 
@@ -115,7 +115,7 @@ run;
 
 * Registrerar/Uppdaterar LASR-tabellen i metadata		;
 proc metalib;
-	omr (library="/Shared Data/SAS Visual Analytics/Acceptans/Visual Analytics Acceptans LASR");
+	omr (library="/Shared Data/SAS Visual Analytics/Visual Analytics LASR");
 	folder="/LUL/Akademiska sjukhuset/Värdebaseradvård/Pnr-rapporter/Data/Swedeheart";
 	select ("&MalTabell");
 run;
