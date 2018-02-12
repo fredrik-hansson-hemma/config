@@ -13,6 +13,13 @@ LIBNAME HPS SASHDAT  PATH="/hps"  SERVER="&hadoopserver"  INSTALL=" /opt/sas/TKG
 LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10011 HOST="&lasrserver"  SIGNER="https://&lasrserver:&lasr_signer_port/SASLASRAuthorization";
 
 
+* Skapa katalogstruktur för det metadata som ska skrivas.
+* 	-Nej! Vad händer om /LUL/Akademiska sjukhuset/Värdebaseradvård/Pnr-rapporter byter namn?
+	Då skapas en ny katalog med felaktiga behörigheter satta. Personnummer kan då läsas av obehöriga!
+	känsliga metadatakataloger måste skapas manuellt så länge de underhålls manuellt.					;
+* /opt/sas/sashome/SASPlatformObjectFramework/9.4/tools/sas-make-folder -profile ~/.SASAppData/MetadataServerProfiles/SASAdm.swa -makeFullPath "/LUL/Akademiska sjukhuset/Värdebaseradvård/Pnr-rapporter/Data/Swedeheart/Mellanlagring_Hadoop" ;
+
+
 * Hämta lista av filer på FTP-servern		;
 
 * Klura ut vilka filnamn som ska läsas in	;
