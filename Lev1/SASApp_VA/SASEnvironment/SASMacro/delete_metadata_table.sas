@@ -34,7 +34,7 @@ ToDo:
 		end;
 
 		* Output for debug purposes				;
-		put nobj= rc=;
+		* put nobj= rc=;
 	run;
 %mend delete_metadata_table;
 
