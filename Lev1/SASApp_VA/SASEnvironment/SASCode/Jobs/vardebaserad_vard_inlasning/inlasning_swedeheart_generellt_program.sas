@@ -5,7 +5,8 @@
 %get_property(property=lasrserver)
 * Hämtar värdet på propertyn "lasr_signer_port" och lagrar den i en global macrovariabel med namnet "lasr_signer_port"	;
 %get_property(property=lasr_signer_port)
-
+* Hämtar metadatasökvägen till libnamet som motsvarar LASR-servern på port 10011	;
+%get_property(property=path_to_lasr_libname_10011)
 
 
 * Ansluter till standard-lasr-servern (den som används för centrala beslutsstöds data) samt till tillhörande Hadoop-instans.	;
@@ -52,11 +53,16 @@ proc import file=infil out=hps.&MalTabell dbms=dlm replace;
 run;
 /***********************************************************************************/
 
-* Skapar libname till swedeheart-filerna	;
+* Skapar libname till swedeheart-filerna						;
 libname swedehea "/opt/sas/RU_Utitlities/UCR-data/";
-proc format cntlin=swedehea.sysformat library=work;
+* Libname till den katalog som VA som default letar format i 	;
+libname formats "/opt/sas/config/Lev1/SASApp_VA/SASEnvironment/SASFormats/";
+
+* Kopierar formaten till SAS-katalogen formats(.sas7bcat) i libnamet formats.		;
+proc format cntlin=swedehea.sysformat library=formats.formats;
 quit;
-proc format cntlin=swedehea.userformat library=work;
+proc format cntlin=swedehea.userformat(where=(fmtname NE "TESTID"))
+			library=formats.formats;
 quit;
 
 * Läser in data i Hadoop ;
@@ -115,7 +121,7 @@ run;
 
 * Registrerar/Uppdaterar LASR-tabellen i metadata		;
 proc metalib;
-	omr (library="/Shared Data/SAS Visual Analytics/Visual Analytics LASR");
+	omr (library="&path_to_lasr_libname_10011");
 	folder="/LUL/Akademiska sjukhuset/Värdebaseradvård/Pnr-rapporter/Data/Swedeheart";
 	select ("&MalTabell");
 run;
