@@ -1,4 +1,4 @@
-%let FilAttLasaIn=HIA-IN_UT-20180201.csv;
+
 %let MalTabell=HIA_IN_UT;
 
 
