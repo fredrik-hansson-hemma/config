@@ -66,9 +66,10 @@ proc format cntlin=swedehea.userformat(where=(fmtname NE "TESTID"))
 quit;
 
 * Läser in data i Hadoop ;
-data hps.&MalTabell(REPLACE=YES);
+data hps."AS_värdebaserad_v_sht_&MalTabell"n(REPLACE=YES);
 	set swedehea.&MalTabell;
 run;
+
 
 
 * Raderar metadata
@@ -78,7 +79,7 @@ run;
 * Tyvärr fungerar inte det eftersom det skapas dubletter av metadatatabeller
 * när man användet prefix (vilket vi behöver göra för att skilja på hadoop-
 * tabeller och vanliga LASRtabeller).)										;
-%delete_metadata_table(stg_&MalTabell);
+%delete_metadata_table(stg_AS_värdebaserad_v_sht_&MalTabell);
 
 
 * Registrerar Hadoop-tabellen i metadata									;
@@ -87,16 +88,13 @@ proc metalib;
 			REPNAME="Foundation" );
 	folder="/LUL/Akademiska sjukhuset/Värdebaseradvård/Pnr-rapporter/Data/Swedeheart/Mellanlagring_Hadoop";
 	prefix="stg_";
-	select ("&MalTabell");
+	select ("AS_värdebaserad_v_sht_&MalTabell");
 	update_rule=(delete);
 run;
 
 
-
-
-
 /* Drop existing table (Visual Data Builder - Delete Table)	*/
-%vdb_dt(VALIBLA.&MalTabell);
+%vdb_dt(VALIBLA."AS_värdebaserad_v_sht_&MalTabell"n);
 * libname VALIBLA CLEAR;
 
 
@@ -107,7 +105,7 @@ run;
 * Ladda in tabellen i rätt LASR-server											;
 /* Optimize Load with PROC LASR */
 proc lasr	PORT=10011
-			data=HPS.&MalTabell
+			data=HPS."AS_värdebaserad_v_sht_&MalTabell"n
 			hdfs (direct)
 			signer="https://&lasrserver:&lasr_signer_port/SASLASRAuthorization"
 			add
@@ -123,11 +121,22 @@ run;
 proc metalib;
 	omr (library="&path_to_lasr_libname_10011");
 	folder="/LUL/Akademiska sjukhuset/Värdebaseradvård/Pnr-rapporter/Data/Swedeheart";
-	select ("&MalTabell");
+	select ("AS_värdebaserad_v_sht_&MalTabell");
 run;
 
 * Något i programmet är inte ordentligt avslutat. Lägger in en quit för att åtgärda...	;
 quit;
+
+
+* Lägger till en beskrivning av tabellen	;
+data _null_;
+	RC=METADATA_SETATTR("omsobj:PhysicalTable?@Name='stg_AS_värdebaserad_v_sht_&MalTabell'","Desc","Akademiska Sjukhuset - Värdebaserad vård - Data från kvalitetsregistret Swedeheart - &MalTabell");
+	if RC NE 0 then put "Mislyckades med att sätta en beskrivning av tabellen";
+	RC=METADATA_SETATTR("omsobj:PhysicalTable?@Name='AS_värdebaserad_v_sht_&MalTabell'",	"Desc","Akademiska Sjukhuset - Värdebaserad vård - Data från kvalitetsregistret Swedeheart - &MalTabell");
+	if RC NE 0 then put "Mislyckades med att sätta en beskrivning av tabellen";
+run;
+
+
 
 
 
