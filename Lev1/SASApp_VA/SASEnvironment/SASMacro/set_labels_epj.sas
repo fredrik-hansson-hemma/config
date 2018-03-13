@@ -25,7 +25,9 @@
 
 	* VATABLE: Den tabell som ska uppdateras med nya kolumnbeskrivningar.;
 	%let vatable = %upcase(&vatable);
-	LIBNAME EPJLA SASIOLA  TAG=epj  PORT=10015 SIGNER="https://bs-ap-20.lul.se:443/SASLASRAuthorization"  HOST="bs-ap-20.lul.se";
+	/***** Kasta mig...				LIBNAME EPJLA SASIOLA  TAG=epj  PORT=10015 SIGNER="https://bs-ap-20.lul.se:443/SASLASRAuthorization"  HOST="bs-ap-20.lul.se";		****/
+	%* Raden ovan är gammal och hårdkodad. använd den nedan för att göra programmet mindre hårt kopplat till produktionsmiljön.		;
+	libname TMP_LA meta metaout=all /*metaout=data*/ library="Visual Analytics EPJ LASR";
 
 
 
@@ -54,15 +56,30 @@
 
 
 	* Hämtar alla tabeller som finns i LASR servern.;
+	/***** Kasta mig...
 	proc sql noprint;
 		create table lasrtables as
 		select memname from dictionary.tables
 		where upcase(libname) = "EPJLA" 
+		%* if "&vatable" ne "" %then %do;
+			and compress(upcase(memname)) = "&vatable"
+		%* end;
+		;
+	quit;
+	*************/
+
+	proc sql noprint;
+		create table lasrtables as
+		select memname from dictionary.tables
+		where upcase(libname) = "TMP_LA" 
 		%if "&vatable" ne "" %then %do;
 			and compress(upcase(memname)) = "&vatable"
 		%end;
 		;
 	quit;
+	
+	* Nu behöver vi inte längre det temporära libnamet	;
+	libname TMP_LA clear;
 
 	%let dsid = %sysfunc(open(lasrtables));
 
@@ -86,6 +103,7 @@
 				SASFormat $20
 				SASInformat $20
 			;
+
 			Keep
 				TableID
 				LibraryID
@@ -102,6 +120,12 @@
 				SASInformat
 
 			;
+			* Sätter till missing för att slippa en massa notes i loggen	;
+			call missing(	uri, c_uri, l_uri, t_uri, lib_uri, sch_uri,
+							publicType, TableID, LibraryID, Vy, TableDesc,
+							SASTableName, ColumnID, ColumnName, ColumnDesc,
+							SASColumnLength, SASColumnType, SASFormat,
+							SASInformat);
 			NOBJ=1;
 			N=1;
 
