@@ -1,4 +1,19 @@
-﻿/** PREPROCESSING CODE **/
+﻿
+/***************************************************************************************************
+Tidigare fanns endast filen "BFC". BFC är namnet på Uppsalas röntgen
+Nu mera kommer röntgendata från både RC (Enköpings röntgen) och BFC.
+Det här programmet läser in nytt data och appendar det till tabellen
+BFC.bfc_och_enkoping_radiologiskt_ce.
+
+Det skapar även vyn "bfcdata.BFC_hist_BFC_ny_LE_RC" som innehåller data från den gamla BFC-tabellen (endast Uppsala data) och
+allt data i BFCdata.bfc_och_enkoping_radiologiskt_ce. Detta för att få en vy som innehåller allt tillgängligt Uppsaladata och 
+allt tillgängligt Enköpingsdata i samma.
+
+***************************************************************************************************/
+
+
+
+/** PREPROCESSING CODE **/
 /* Steg i programmet: */
 /* 1. Kollar om BFC.txt finns på FTP-servern. Finns den inte så avbryts programmet. */
 /* 2. Läser in BFC.txt till temporär work-tabell. */
