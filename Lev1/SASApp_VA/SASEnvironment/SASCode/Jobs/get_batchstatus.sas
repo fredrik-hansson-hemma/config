@@ -165,7 +165,7 @@ ods listing;
 
 
 
-%let to_beslutstod_error	=	"fredrik.hansson@regionuppsala.se" "beslutsstod@support.lul.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se" "karl.alvtorn@regionuppsala.se";
+%let to_beslutstod_error	=	"beslutsstod@regionuppsala.se" "fredrik.hansson@regionuppsala.se" "hakan.edling@regionuppsala.se" "jan.von.knorring@regionuppsala.se" "karl.alvtorn@regionuppsala.se";
 %let to_ftv_error			=	"fredrik.hansson@regionuppsala.se" "ftv.it@lul.se";
 %let to_ftv_ok				=	"joakim.bergquist@lul.se";
 %let to_epj_error			=	"fredrik.hansson@regionuppsala.se" "fredrik.lagerqvist@regionuppsala.se" "mats.eberhardsson@regionuppsala.se" "mats.bystrom@regionuppsala.se" "irene.marx.melin@regionuppsala.se";
