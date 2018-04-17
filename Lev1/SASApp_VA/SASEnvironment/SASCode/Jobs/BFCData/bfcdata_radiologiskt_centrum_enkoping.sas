@@ -3,11 +3,19 @@
 Tidigare fanns endast filen "BFC". BFC är namnet på Uppsalas röntgen
 Nu mera kommer röntgendata från både RC (Enköpings röntgen) och BFC.
 Det här programmet läser in nytt data och appendar det till tabellen
-BFC.bfc_och_enkoping_radiologiskt_ce.
+BFCDATA.bfc_och_enkoping_radiologiskt_ce.
 
-Det skapar även vyn "bfcdata.BFC_hist_BFC_ny_LE_RC" som innehåller data från den gamla BFC-tabellen (endast Uppsala data) och
-allt data i BFCdata.bfc_och_enkoping_radiologiskt_ce. Detta för att få en vy som innehåller allt tillgängligt Uppsaladata och 
+Det skapar även vyn "bfcdata.prod_UAS_BFC_och_LE_radiologi" som innehåller data från den gamla BFC-tabellen (endast Uppsala data) och
+allt data i BFCDATA.bfc_och_enkoping_radiologiskt_ce. Detta för att få en vy som innehåller allt tillgängligt Uppsaladata och 
 allt tillgängligt Enköpingsdata i samma.
+
+Och lite grafiskt blir det såhär:
+
+
+Nytt data från FTP	--|append|-->	BFC_OCH_ENKOPING_RADIOLOGISKT_CE	--|ingår i vyn|------>	PROD_UAS_BFC_OCH_LE_RADIOLOGI
+																								   /
+BFC(historiskt data som ej uppdateras)	--|ingår i vyn|-->	BFC_I_NYA_FORMATET	--|ingår i vyn|---/	
+
 
 ***************************************************************************************************/
 
@@ -63,7 +71,8 @@ run;
 /* Läs in data om fil finns. */
 
 * fil som används under utveckling	;
-filename fil "/saswork/LUL/BFCDATA/&FIL" /* ENCODING="utf-8" TERMSTR=CRLF */;
+* Observera att infile-statement också behöver ändras om man vill läsa från disk.	;
+* filename fil "/saswork/LUL/BFCDATA/&FIL" /* ENCODING="utf-8" TERMSTR=CRLF */;
 
 /********* Bara för att generera upp ett inläsnings-datasteg
 proc import file=fil out=BFC_LE replace dbms=tab;
@@ -74,7 +83,10 @@ run; *********/
 
 * Specifikation av måltabell och inläsning av data i samma datasteg	;
 data WORK.BFC_LE;
-	infile FIL delimiter='09'x MISSOVER DSD  firstobs=2 end=last;
+	* Raden nedan används om man ska läsa från fil på disk (ej via FTP)	;
+	* infile FIL delimiter='09'x DSD firstobs=2 MISSOVER end=last  ;
+
+	INFILE fil delimiter='09'x DSD FIRSTOBS=2 MISSOVER LRECL=504 ENCODING="LATIN9" TERMSTR=CRLF ;
 	attrib
 		Utforande_enhet	length=$17	label="Utförande enhet"
 		Bokningstyp		length=$40	/* (tidigare kallad BOOKRESP_DESC)	*/
@@ -99,6 +111,7 @@ data WORK.BFC_LE;
 		RESCODE_DESC	length=$63	label='Undersökningskod'
 		metodgrupp		length=$20	label='Undersökn./Eftergranskn.'
 		sektion 		length=$35	label="Sektion"
+		DOCTOR_NAME		length=$67	label="Dikt.läk"	/*	Den här kolumnen finns endast i gammalt BFC-data. Kanske dags att ta bort den snart?	*/
 		;
 	
 	input
@@ -109,7 +122,7 @@ data WORK.BFC_LE;
 		;
 
 	* Initialiserar variabler som ska få sina värden lite senare i programmet	;
-	call missing(d_METHODS_DESC, metodgrupp, sektion);
+	call missing(d_METHODS_DESC, metodgrupp, sektion, DOCTOR_NAME);
 run;
 
 
@@ -132,6 +145,8 @@ proc format lib=work;
 		'BFC onkologi' = 'Molekulär bilddiagnostik'
 		'BFC PET-centrum' = 'Molekulär bilddiagnostik'
 		other = 'BORT';
+
+	/* Det här formatet användes tidigare för urval. Nu görs urvalet i data builder istället.
 	value $metod
 		'DT' = 'KVAR'
 		'DXA' = 'KVAR'
@@ -144,6 +159,7 @@ proc format lib=work;
 		'SKYLT' = 'KVAR'
 		'ULJ' = 'KVAR'
 		other = 'BORT';
+	****************************************************************************************/
 quit;
 
 
@@ -156,6 +172,7 @@ data work.BFC_LE_deriverade_variabler;
 
 	* Beräknar kolumnerna d_methods_desc och metodgrupp		;
 	if bokningstyp in('Eftergranskning med arkivering' 'Eftergranskning utan arkivering') then do;
+		* Eftergranskning kallas "SKYLT" för BFC			;
 		if substr(Utforande_enhet, 1,3)="BFC" then do;
 			d_methods_desc='SKYLT';
 			metodgrupp = 'Skylt';
@@ -176,10 +193,13 @@ data work.BFC_LE_deriverade_variabler;
 	* Gäller endast BFC		;
 	if substr(Utforande_enhet, 1,3)="BFC" then do;
 		sektion = put(visitreqgr, $sektion.);
+
+		/* Dessa urval är flyttade till databuildern
 		* Ta bort värden som inte har giltig Sektion;
 		if upcase(sektion) = 'BORT' then delete;
 		* Ta bort avvikande värden för Methods_desc;
-		if put(upcase(d_methods_desc), $metod.) = 'BORT' then delete;	
+		if put(upcase(d_methods_desc), $metod.) = 'BORT' then delete;
+		******************************************************/
 	end;
 	drop METHODS_DESC;
 
@@ -232,7 +252,10 @@ data bfcdata.BFC_och_Enkoping_radiologiskt_ce;
 			length=$63
 		USPRIO
 			length=$18
-			label='Önskad prio';
+			label='Önskad prio'
+		DOCTOR_NAME
+			length=$67
+			label="Dikt.läk";
 	set bfcdata.BFC_och_Enkoping_radiologiskt_ce;
 run;
 
@@ -383,8 +406,7 @@ data bfcdata.BFC_i_nya_formatet / view=bfcdata.BFC_i_nya_formatet;
 	
 	drop
 		did
-		REQGR_ANSVAR 
-		DOCTOR_NAME
+		REQGR_ANSVAR
 		;
 run;
 
@@ -400,19 +422,35 @@ run;
 
 * Om append ovan går igenom utan varningar eller fel, är det fritt fram att skapa en vy där man 
 * slår ihop de båda dataseten.																	;
-data bfcdata.BFC_hist_BFC_ny_LE_RC(label="BFC historiskt data + BFC-data och Lasarettet i Enköping Radiologiskt centrum-data") / view=bfcdata.BFC_hist_BFC_ny_LE_RC;
+data bfcdata.prod_UAS_BFC_och_LE_radiologi(label="BFC historiskt data + BFC-data och Lasarettet i Enköping Radiologiskt centrum-data") / view=bfcdata.prod_UAS_BFC_och_LE_radiologi;
 	set bfcdata.bfc_i_nya_formatet
 		bfcdata.bfc_och_enkoping_radiologiskt_ce;
 run;
 
-* Provläser en rad från vyn	(Bättre att det smäller nu än senare)	;
+* Provläser en rad från vyn	(Bättre att det smäller nu än senare när vi försöker använda vyn i VA)	;
 data _null_;
 	set &syslast(obs=1) end=last;
 run;
 
 
-proc setinit;
+
+
+
+* Registrerar SAS-vyn i metadata									;
+proc metalib;
+	omr (	library="/Shared Data/Datakälla BFC/BFCDATA"
+			REPNAME="Foundation" );
+	folder="/Shared Data/Datakälla BFC";
+	select ("prod_UAS_BFC_och_LE_radiologi");
 run;
+
+
+* Lägger till en beskrivning av vyn									;
+data _null_;
+	RC=METADATA_SETATTR("omsobj:PhysicalTable?@Name='prod_UAS_BFC_och_LE_radiologi'","Desc","Data från BFC i Uppsala samt Radiologen på Enköpings Lasarett");
+	if RC NE 0 then put "Misslyckades med att sätta en beskrivning av tabellen";
+run;
+
 
 
 /****************
