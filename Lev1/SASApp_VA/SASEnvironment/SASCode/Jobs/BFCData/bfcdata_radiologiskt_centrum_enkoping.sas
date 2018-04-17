@@ -17,18 +17,18 @@ Nytt data från FTP	--|append|-->	BFC_OCH_ENKOPING_RADIOLOGISKT_CE	--|ingår i v
 BFC(historiskt data som ej uppdateras)	--|ingår i vyn|-->	BFC_I_NYA_FORMATET	--|ingår i vyn|---/	
 
 
-***************************************************************************************************/
+********************************************************************************************************
 
-
-
-/** PREPROCESSING CODE **/
-/* Steg i programmet: */
-/* 1. Kollar om BFC.txt finns på FTP-servern. Finns den inte så avbryts programmet. */
-/* 2. Läser in BFC.txt till temporär work-tabell. */
-/* 3. Gör databearbetning. */
-/* 4. Hämtar datum från BFC.txt, rensar från SASDATA.BFC samma period. */
-/* 5. Appendar data till SASDATA.BFC. */
-/* 6. Tar bort BFC.txt från FTP-server. */
+Steg i programmet:
+1. Kollar om BFC_LE.txt finns på FTP-servern. Finns den inte så avbryts programmet.
+2. Läser in BFC_LE.txt till temporär work-tabell.
+3. Gör databearbetning.
+4. Hämtar datum från BFC_LE.txt, rensar från bfcdata.BFC_och_Enkoping_radiologiskt_ce samma period.
+5. Appendar data till bfcdata.BFC_och_Enkoping_radiologiskt_ce.
+6. Tar bort BFC_LE.txt från FTP-server.
+7. Skapar en vy som gör det gamla datasetet bfcdata.BFC kompatibel med det nya dataformatet
+8. Slår samman gammalt och nytt data i en gemensam vy.
+********************************************************************************************************/
 LIBNAME BFCDATA BASE "/saswork/LUL/BFCDATA";
 %let FIL=BFC_LE.txt;
 
@@ -56,29 +56,30 @@ run;
 %put RC=&rc;
 
 
+%global abort_if_no_file_found;
 data _null_;
 	if "&RC" ne "FILE FOUND" then do;
 		put "INFO: Filen &FIL hittades inte på servern. Programmet avbryts.";
-		abort cancel 0;
+		call symputx("abort_if_no_file_found", "endsas");
 	end;
 	else  do;
 		put "INFO: Filen &FIL hittades på servern. Programmet fortsätter med att försöka läsa in filen.";
+		call symputx("abort_if_no_file_found", '');
 	end;
 run;
 
+* Macrovariabeln abort_if_no_file_found kan vara tom eller innehålla "endsas"		;
+&abort_if_no_file_found;
 
 
 /* Läs in data om fil finns. */
 
-* fil som används under utveckling	;
+
+********************************************************************************************************
+* fil som används under utveckling
 * Observera att infile-statement också behöver ändras om man vill läsa från disk.	;
 * filename fil "/saswork/LUL/BFCDATA/&FIL" /* ENCODING="utf-8" TERMSTR=CRLF */;
-
-/********* Bara för att generera upp ett inläsnings-datasteg
-proc import file=fil out=BFC_LE replace dbms=tab;
-	datarow=2;
-	guessingrows=ALL;
-run; *********/
+********************************************************************************************************;
 
 
 * Specifikation av måltabell och inläsning av data i samma datasteg	;
@@ -128,6 +129,7 @@ run;
 
 
 proc format lib=work;
+	* Format som används för urval	;
 	value $sektion
 		'BFC skelett' = 'Muskuloskeletal'
 		'BFC barn' = 'Muskuloskeletal'
@@ -145,21 +147,6 @@ proc format lib=work;
 		'BFC onkologi' = 'Molekulär bilddiagnostik'
 		'BFC PET-centrum' = 'Molekulär bilddiagnostik'
 		other = 'BORT';
-
-	/* Det här formatet användes tidigare för urval. Nu görs urvalet i data builder istället.
-	value $metod
-		'DT' = 'KVAR'
-		'DXA' = 'KVAR'
-		'NM TERAPI' = 'KVAR'
-		'INTERVENTION' = 'KVAR'
-		'KONV RTG' = 'KVAR'
-		'MR' = 'KVAR'
-		'NM' = 'KVAR'
-		'PET' = 'KVAR'
-		'SKYLT' = 'KVAR'
-		'ULJ' = 'KVAR'
-		other = 'BORT';
-	****************************************************************************************/
 quit;
 
 
@@ -193,26 +180,28 @@ data work.BFC_LE_deriverade_variabler;
 	* Gäller endast BFC		;
 	if substr(Utforande_enhet, 1,3)="BFC" then do;
 		sektion = put(visitreqgr, $sektion.);
-
-		/* Dessa urval är flyttade till databuildern
-		* Ta bort värden som inte har giltig Sektion;
-		if upcase(sektion) = 'BORT' then delete;
-		* Ta bort avvikande värden för Methods_desc;
-		if put(upcase(d_methods_desc), $metod.) = 'BORT' then delete;
-		******************************************************/
 	end;
+
 	drop METHODS_DESC;
 
 run;
 
 
 
+
+
+/********************************************************
 title "Koll (endast under utveckling)";
 proc SQL;
-	select d_methods_desc, count(*)
+	select	put(BOOKDATE, yymmD7.) as book_month,
+			d_methods_desc,
+			count(*)
 	from work.BFC_LE_deriverade_variabler
-	group by d_methods_desc;
+	group by calculated book_month, d_methods_desc;
 quit;
+********************************************************/
+
+
 
 
 
@@ -222,87 +211,26 @@ proc append
 	data=work.BFC_LE_deriverade_variabler(OBS=0)
 	force;
 run;
-/*****
-proc append
-	base=bfcdata.BFC
-	data=work.BFC_LE_deriverade_variabler(OBS=0)
-	force;
-run;
-*******/
-
-/******
-proc SQL;
-	select bookresp_desc, put(bookdate, yymm7.) as manad, count(*)
-	from bfcdata.bfc
-	group by bookresp_desc, manad;
-quit;
 
 
-data test;
-	set bfcdata.bfc;
-	where adm_code NE "";
-run;
-
-
-/********* Ändrar i målfilen (endast under utveckling
-
-data bfcdata.BFC_och_Enkoping_radiologiskt_ce;
-	attrib
-		RESCODE_DESC
-			length=$63
-		USPRIO
-			length=$18
-			label='Önskad prio'
-		DOCTOR_NAME
-			length=$67
-			label="Dikt.läk";
-	set bfcdata.BFC_och_Enkoping_radiologiskt_ce;
-run;
-
-Proc DataSets Lib = bfcdata;
-Modify BFC_och_Enkoping_radiologiskt_ce;
-format RESCODE_DESC DLOCATION_DESC;
-Run ; 
-Quit ;
-
-data bfcdata.Enkoping_radiologiskt_centrum;
-	attrib
-		BOOKRESP_DESC	length=$41	label= 'Bokn.ansvar'
-		DID				length=$12	label='(Inaktuell kolumn) Personnr'
-		ADM_CODE		length=$22	label= 'Admin.typ'
-		REQGR_ANSVAR 	length=8	label='(Inaktuell kolumn) Ansvar Rem.grp'
-		DOCTOR_NAME		length=$67	label='(Inaktuell kolumn) Dikt.läk'
-		Utforande_enhet	length=$17
-		sektion 		length=$35	label="Sektion"
-		BOOKTIME		length=8	label='Tid'			format=TIME.		informat=TIME.;
-	length 
-		SIGNDOC1_NAME $45
-		SIGNDOC2_NAME $45
-		STATUS $14
-		Forskning $7
-		;
-	set bfcdata.Enkoping_radiologiskt_centrum(drop=BOOKTIME methods_desc);
-run;
-*************/
-
-
-/*** Omstart (endast under utveckling!)
-proc SQL;
-	drop table bfcdata.BFC_och_Enkoping_radiologiskt_ce;
-quit;
-****/
-
-
-* Tar fram vilka perioder(månader) som finns i filen ;
+* Tar fram vilka perioder(månader) som finns i den nya filen	;
 proc SQL noprint;
 	select distinct put(bookdate, yymmn6.) into :periods separated by '" "'
 	from work.BFC_LE_deriverade_variabler;
 quit;
-
 %put "&periods";
 
 
-* Rensa om period(er) redan är inläst;
+***********************************************************	;
+* Rensa om period(er) redan är inläst.
+* ---------------------------------------------------------  
+* Observera att tabellen bfcdata.BFC inte rensas! 
+* Det går alltså inte att rätta historiskt data.
+* Om man vill kunna göra det, får man helt enkelt göra en
+* till SQL som liknar den nedan. Ersättningsdata skrivs
+* sedan till bfcdata.BFC_och_Enkoping_radiologiskt_ce, inte
+* till bfcdata.BFC.
+***********************************************************	;
 proc sql noprint;
 	delete from bfcdata.BFC_och_Enkoping_radiologiskt_ce
 	where put(bookdate, yymmn6.) in("&periods");
@@ -394,12 +322,9 @@ data bfcdata.BFC_i_nya_formatet / view=bfcdata.BFC_i_nya_formatet;
 	* Skapar variabel som visar att data hör till BFC. Den fanns inte tidigare eftersom allt data då hörde till BFC	;
 	Utforande_enhet="BFC historik";
 
-	/****
-	* Kollar upp maxlängden för en viss variabel bra vid utveckling	;
-	retain maxlength 0;
-	length=length(RESCODE_DESC);
-	if length GT maxlength then maxlength=length;
-	****/
+	if metodgrupp = 'Undersökn.' then do;
+		metodgrupp = 'Undersökning';
+	end;
 
 	* Initialiserar variabel för att slippa meddelande i loggen	;
 	call missing(Forskning);
@@ -468,15 +393,7 @@ run;
 
 ********************/
 
-/***
-* Registrerar SAS-tabellen i metadata									;
-proc metalib;
-	omr (	library="/Shared Data/Datakälla BFC/BFCDATA"
-			REPNAME="Foundation" );
-	folder="/Shared Data/Datakälla BFC";
-	select ("BFC");
-run;
-*****/
+
 
 /******************
 * Fejka data för fler år	;
