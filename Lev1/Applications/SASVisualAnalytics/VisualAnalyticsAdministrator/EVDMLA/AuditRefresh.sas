@@ -9,7 +9,8 @@ data _null_;
    /* 15 minutes = 900 seconds     */
    /* 1  day     = 86400 seconds   */      
    /* 30 days    = 2592000 seconds */
-   auditinterval = 2592000;
+   /* 366 days   = 31622400 seconds*/
+   auditinterval = 31622400;
    
    /* GMT offset in seconds */
    gmtoffset     = 0;
