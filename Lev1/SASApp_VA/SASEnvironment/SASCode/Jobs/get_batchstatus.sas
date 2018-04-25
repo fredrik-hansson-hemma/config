@@ -194,10 +194,13 @@ ods listing;
 		filename outbox email
 			to=("fredrik.hansson@regionuppsala.se")
 			subject="&subject"
-			content_type="text/html";
+			content_type="text/html"
+			attach=("&path./completejobs.html" "&path./errorjobs.html")
+		;
 
 		data _null_;
 		  file outbox;
+		  put "Status från batchkörning &today.";
 		  infile error lrecl=32767;
 		  input;
 		  put _infile_;
