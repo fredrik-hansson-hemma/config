@@ -57,3 +57,59 @@ options nomprint;
 %put Senast modifierad den %sysfunc(datepart(&MDATE), yymmdd10.);
 
 /****************************************************************/
+
+
+/****************************************************************
+Exempel på användning i LASR-laddning-sammanhang
+Avbryt laddningen om LASR-tabellen är nyare än källtabellen
+/****************************************************************
+
+* Observera att den här koden kan ge upphov till märkliga felmeddelanden när
+* den körs med playknappen i databuilder i VA.
+* Den bör fungera bra när den är deployad/schemalagd.							;
+
+* Hämtar källtabellens senast-uppdaterad-datum		;
+
+LIBNAME BFCDATA BASE "/saswork/LUL/BFCDATA";
+
+%let dsid=%sysfunc(open(BFCDATA.PROD_UAS_BFC_OCH_LE_RADIOLOGI));
+%let source_table_modified_timestamp=%sysfunc(attrn(&dsid,modte));
+%let rc=%sysfunc(close(&dsid));
+
+
+
+* Hämtar LASR-tabellens senast-uppdaterad-datum		;
+
+* Hämtar värdet på propertyn "lasrserver" och "lasr_signer_port". Lagrar i en globala macrovariabler.	;
+%get_property(property=lasrserver)
+%get_property(property=lasr_signer_port)
+
+* Ansluter till standard-lasr-servern (den som används för centrala beslutsstöds data).	;
+LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10011 HOST="&lasrserver"  SIGNER="https://&lasrserver:&lasr_signer_port/SASLASRAuthorization";
+
+
+%get_lasr_table_property(	Libname=VALIBLA, table=PRODUKTION_LE_RADIOLOGI, property=MDATE)
+/* %get_lasr_table_property(	Libname=VALIBLA, table=PRODUKTION_UAS_BFC, property=MDATE) */
+%let LASR_table_modified_timestamp=&MDATE;
+
+
+
+
+
+* Avbryter om LASR-tabellen är nyare än källtabellen	;
+%macro abort_if_source_not_updated;
+	%put NOTE: =====================================================================================================;
+	%if &LASR_table_modified_timestamp > &source_table_modified_timestamp %then %do;
+		%put NOTE: LASR-tabellen är nyare än källtabellen, och behöver därför inte uppdateras. SAS-sessionen avbryts.	;
+		endsas;
+	%end;
+	%else %do;
+		%put NOTE: &=LASR_table_modified_timestamp < &=source_table_modified_timestamp;
+		%put NOTE: Det betyder att LASR-tabellen behöver laddas med nytt data			;
+	%end;
+	%put NOTE: =====================================================================================================;
+%mend abort_if_source_not_updated;
+
+%abort_if_source_not_updated
+
+/****************************************************************/
