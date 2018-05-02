@@ -28,6 +28,7 @@
 
 	* Hämta timestamp för den aktuella tabellen, Lagra svaret i ut-macrovariabeln	;
 	%global &property;
+	%let &property=;
 	proc SQL noprint;
 		select &property &format into :&property
 		from work.lasr_tabeller
@@ -43,10 +44,23 @@
 %mend get_lasr_table_property;
 
 
+/*********
+proc SQL;
+	drop table VALIBLA.Produktion_UAS_BFC;
+quit;
+*********/
+
+
+
+
+
 /******************** För provkörning **************************
 
 LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10011 HOST="bst-apx-20.lul.se"  SIGNER="https://bst-apx-20.lul.se:8343/SASLASRAuthorization" ;
 
+%get_lasr_table_property(	Libname=VALIBLA,
+							table=PRODUKTION_UAS_BFC,
+							property=MDATE)
 
 options nomprint;
 %get_lasr_table_property(	Libname=VALIBLA,
@@ -57,6 +71,9 @@ options nomprint;
 %put Senast modifierad den %sysfunc(datepart(&MDATE), yymmdd10.);
 
 /****************************************************************/
+
+
+
 
 
 /****************************************************************
@@ -90,10 +107,14 @@ LIBNAME VALIBLA SASIOLA  TAG=HPS  PORT=10011 HOST="&lasrserver"  SIGNER="https:/
 
 %get_lasr_table_property(	Libname=VALIBLA, table=PRODUKTION_LE_RADIOLOGI, property=MDATE)
 /* %get_lasr_table_property(	Libname=VALIBLA, table=PRODUKTION_UAS_BFC, property=MDATE) */
+
+
+/**************
 %let LASR_table_modified_timestamp=&MDATE;
+/**************/
 
 
-
+/**************
 
 
 * Avbryter om LASR-tabellen är nyare än källtabellen	;
