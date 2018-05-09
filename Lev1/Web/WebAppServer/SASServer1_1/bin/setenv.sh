@@ -8,7 +8,7 @@ JAVA_HOME=/opt/sas/sashome/SASPrivateJavaRuntimeEnvironment/9.4/jre
 AGENT_PATHS=""
 JAVA_AGENTS=""
 JAVA_LIBRARY_PATH=""
-JVM_OPTS="-Xmx8192m \
+JVM_OPTS="-Xmx12288m \
  -Xss256k \
  -Xms8192m \
  -XX:PermSize=1664m \
