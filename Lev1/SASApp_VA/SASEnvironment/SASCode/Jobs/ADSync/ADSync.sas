@@ -88,14 +88,14 @@ data logins_add (keep=keyid userid password authdomkeyid objid externalkey);
 	authdomkeyid = "domkeyDEFAULTAUTH";
 	userid=keyid;
 	output;
-  authdomkeyid = "domkeyWEB";
+	authdomkeyid = "domkeyWEB";
 	userid=keyid;
 	output;
 
 run;
 
 data metaUpd.logins_add;
-  set logins_add;
+	set logins_add;
 run;
 
 /* Rensar de personer som inte finns som konton i AD. De ska inte läsas in som gruppmedlemar. */
@@ -116,7 +116,7 @@ run;
 
     
 		filename outbox email 
-	  to=("bjorn.rengerstam@akademiska.se" "magnus.knopf@akademiska.se" "peter.ostrom@akademiska.se" "fredrik.hansson@regionuppsala.se") 
+	  to=("magnus.knopf@akademiska.se" "peter.ostrom@akademiska.se" "fredrik.hansson@regionuppsala.se") 
 	  subject="ADSynk stoppad. Rensa bland SAS-grupper och användarkonton";
 
     data _null_;
