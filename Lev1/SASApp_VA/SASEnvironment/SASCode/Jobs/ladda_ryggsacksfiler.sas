@@ -108,7 +108,7 @@ options set=GRIDINSTALLLOC="/opt/sas/TKGrid";
 
 	%put Läser in data med hjälp av proc import	;
 	proc import file=fil_locl out=pub.&namn_i_VA. dbms=TAB replace;
-		guessingrows=32767;
+		guessingrows=MAX;
 	run;
 
 	
