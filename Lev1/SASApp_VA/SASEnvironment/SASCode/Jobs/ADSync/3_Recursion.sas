@@ -44,7 +44,7 @@
 	%end;
 	%let rerun = 0;
 
-	%put Inaktiverar loggning 
+	%put Inaktiverar loggning;
 	filename slask dummy;
 	proc printto log=slask;
 	run;
@@ -76,7 +76,16 @@
 	%if &rerun eq 1 %then %do;
 		%Recursion;
 	%end;
-%mend;
+%mend Recursion;
+
+
+
+
+%Recursion(firsttime=1);
+
+
+
+
 
 /* Macro: VanligaADGrupper
 * Anpassning LUL. Macrot plockar ut alla personer ur vanliga AD-grupper så som 
@@ -256,12 +265,20 @@
 
 %mend vanligaADGrupper;
 
-%Recursion(firsttime=1);
+
 
 /* Start: Anpassning LUL. */
 /* I AD:s SAS-grupper kan IT-samordnare lägga in vanliga AD-grupper (typ -Users -Users-FIM). */
 /* För varje AD-grupp som inte har ändelsen -SAS görs ny sökning mot AD för att hämta upp medlemmar. */
 
+%put Inaktiverar loggning ;
+filename slask dummy '/tmp/slask.log';
+proc printto log=slask new;
+run;
+
 %vanligaADGrupper;
+
+proc printto;
+run;
 
 /* Slut: Anpassning LUL. */
