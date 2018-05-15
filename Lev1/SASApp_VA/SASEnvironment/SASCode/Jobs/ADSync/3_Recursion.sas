@@ -44,10 +44,8 @@
 	%end;
 	%let rerun = 0;
 
-	%put Inaktiverar loggning;
-	filename slask dummy;
-	proc printto log=slask;
-	run;
+	%put Inaktiverar notes;
+	options nonotes;
 
 	%do i=1 %to &name_len;
 		/* test whether this is already done */
@@ -56,6 +54,7 @@
 		quit;
 
 		%if &done=0 %then %do;
+			options notes;
 			%let rerun = 1;
 			%let n     = %bquote(&&name&i);  /* escape if names contain quotes */
 			proc sql noprint;
@@ -66,23 +65,30 @@
 			/* append the result */
 			proc append base=adExt.ldapgrps data=work.ldapgrps;
 			run;
-
+			options nonotes;
 		%end;
 	%end;
 
-	proc printto;
-	run;
-
+	%put Aktiverar notes;
+	options notes;
 	%if &rerun eq 1 %then %do;
 		%Recursion;
 	%end;
+
+
 %mend Recursion;
-
-
-
 
 %Recursion(firsttime=1);
 
+
+
+
+
+
+
+/* Start: Anpassning LUL. */
+/* I AD:s SAS-grupper kan IT-samordnare lägga in vanliga AD-grupper (typ -Users -Users-FIM). */
+/* För varje AD-grupp som inte har ändelsen -SAS görs ny sökning mot AD för att hämta upp medlemmar. */
 
 
 
@@ -95,190 +101,221 @@
 * LUL-FTV-Users-FIM gruppen ska inte läsas in i SAS metadata. 
 */ 
 
-%macro vanligaADGrupper();
- 		
-  proc datasets lib=work nolist;
-		delete temp_ldapgrps nytrad2 anvand nytrad;
-	quit;
 
-	data medlemsgrupper;
-		set adExt.ldapgrps;
 
-		/* Hämta alla medlemmar som är grupper. Om medlemsnamn innehåller siffror är det antagligen ett användarID */
-  	/* och sållas därför bort. */
-		if length(member) in (6,8) and (
-			index(member,'1') or index(member,'2') or index(member,'3') or index(member,'4') or index(member,'5') or
-			index(member,'6') or index(member,'7') or index(member,'8') or index(member,'9') or index(member,'0')
-			) then delete;
-		if missing(member) then delete; 
-	run;
+proc datasets lib=work nolist;
+	delete temp_ldapgrps nytrad2 anvand nytrad;
+quit;
 
-  /* Filterar bort de medlemmar som finns i ldaggrps som huvudgrupper. */
-  proc sql noprint;
-    create table nyagrupper as
-		select medlemsgrupper.*
-		from medlemsgrupper as medlemsgrupper
-		where medlemsgrupper.member not in (select name from adext.ldapgrps);
-	quit;
 
- 
-
-	%let ny_id = %sysfunc(open(nyagrupper));
-	  
-	/* Läs in varje ny grupp från AD. */
-	%do %while (%sysfunc(fetch(&ny_id)) = 0);
-	  * Sparar undan namn på huvudgruppen;
-		%let x_name = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, NAME)))); 
-	  %let x_grouptype = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, GROUPTYPE)))); 
-		%let x_description = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, DESCRIPTION)))); 
-		%let x_samaccountname = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, SAMACCOUNTNAME)))); 
-		%let x_distinguishedname = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, DISTINGUISHEDNAME)))); 
-		%let member = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, MEMBER)))); 
-
-		* Hämtar member från AD.;
-    %ADGroupFilter(filter=&member); 
-
-		data pers grps;
-		set ldapgrps;
-		if missing(member) then delete;
-		* Om member är en person ska de flyttas till huvudgruppen;
-		if length(member) in (6,8) and (
+data medlemsgrupper;
+	set adExt.ldapgrps;
+	/* Hämta alla medlemmar som är grupper. Om medlemsnamn innehåller siffror är det antagligen ett användarID */
+	/* och sållas därför bort. */
+	if length(member) in (6,8) and (
 		index(member,'1') or index(member,'2') or index(member,'3') or index(member,'4') or index(member,'5') or
 		index(member,'6') or index(member,'7') or index(member,'8') or index(member,'9') or index(member,'0')
-		) then do;
-			name = "&x_name";
-			grouptype = "&x_grouptype";
-			description = "&x_description";
-			samaccountname = "&x_samaccountname";
-			distinguishedname = "&x_distinguishedname";
-			output pers;
-		end;
-		else output grps;
-		run;
-	
-		/* Lägg in personer i Adext.ldapgrps. */
-		proc append base=temp_ldapgrps data=pers force;
-		run;
-		
-		/* Finns gruppen redan inläst från AD ska den inte hämtas in igen. */		
-		data anvand (keep=member);
-			set grps;
-		run;	
+		) then
+		delete;
 
-		data nytrad (keep=member);
-			set grps;
-		run;
+	if missing(member) then	delete;
+run;
 
-    proc datasets lib=work nolist;
-		  delete nytrad2;
-	  quit;
-		
-		%let nytrad_id = %sysfunc(open(NYTRAD));
-		%let antal = %sysfunc(attrn(&nytrad_id, NOBS)); 
-		/* Loopen ska avslutas om det inte finns mer medlemsgrupper att hämta in. */ 
-		%if &antal le 0 %then %let igen = 0;
-		%if &antal > 0 %then %let igen = 1;
-		%let nytrad_id = %sysfunc(close(&nytrad_id));
-		
+/* Filterar bort de medlemmar som finns i ldaggrps som huvudgrupper. */
+proc sql noprint;
+	create table nyagrupper as
+	select medlemsgrupper.*
+	from medlemsgrupper as medlemsgrupper
+	where medlemsgrupper.member not in (select name from adext.ldapgrps);
+quit;
 
-    * Om der finns grupper i grupper; 
-  	%do %while (&igen = 1);
-     	%if %sysfunc(exist(NYTRAD2)) %then %do;
-			  data nytrad; set nytrad2; run;
-		  %end; * if sysfunc(exist(NYTRAD2));
-		%let index = 0; * Index: används för att räkna antal loopar;
-  		%let nytrad_id = %sysfunc(open(NYTRAD));
-	    
-			* loop through nytrad;
-			%do %while (%sysfunc(fetch(&nytrad_id)) = 0);
-			%let index = %eval(&index + 1);
-			%let member = %sysfunc(getvarc(&nytrad_id, %sysfunc(varnum(&nytrad_id, MEMBER)))); 
 
-	
-			* Hämtar member från AD.;
-    	%ADGroupFilter(filter=&member); 
 
-			data pers grps;
+
+%macro vanligaADGrupper();
+	%let ny_id = %sysfunc(open(nyagrupper));
+
+	/* Läs in varje ny grupp från AD. */
+	%do %while (%sysfunc(fetch(&ny_id)) = 0);
+
+		* Sparar undan namn på huvudgruppen;
+		%let x_name = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, NAME))));
+		%let x_grouptype = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, GROUPTYPE))));
+		%let x_description = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, DESCRIPTION))));
+		%let x_samaccountname = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, SAMACCOUNTNAME))));
+		%let x_distinguishedname = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, DISTINGUISHEDNAME))));
+		%let member = %sysfunc(getvarc(&ny_id, %sysfunc(varnum(&ny_id, MEMBER))));
+
+		* Hämtar member från AD.;
+		%ADGroupFilter(filter=&member);
+
+		data pers grps;
 			set ldapgrps;
+
 			if missing(member) then delete;
+
 			* Om member är en person ska de flyttas till huvudgruppen;
 			if length(member) in (6,8) and (
-			index(member,'1') or index(member,'2') or index(member,'3') or index(member,'4') or index(member,'5') or
-			index(member,'6') or index(member,'7') or index(member,'8') or index(member,'9') or index(member,'0')
-			) then do;
+					index(member,'1') or index(member,'2') or index(member,'3') or index(member,'4') or index(member,'5') or
+					index(member,'6') or index(member,'7') or index(member,'8') or index(member,'9') or index(member,'0')
+				) then do;
+
 				name = "&x_name";
 				grouptype = "&x_grouptype";
 				description = "&x_description";
 				samaccountname = "&x_samaccountname";
 				distinguishedname = "&x_distinguishedname";
+
 				output pers;
 			end;
 			else do;
 				output grps;
 			end;
-			run;
-	
-			/* Lägg in personer i Adext.ldapgrps. */
-			proc append base=temp_ldapgrps data=pers force;
-			run;
-		
-			/* Finns gruppen redan inläst från AD ska den inte hämtas in igen. */		
-			proc sql noprint;
-		 	delete from grps
-			where member in (select member from anvand);
-    	quit;			
 
-			proc append base=anvand data=grps (keep=member);
-			run;
+		run;
 
-			* Om första loopen;
-			%if &index = 1 %then %do;
-				data nytrad2;
-					set grps;
+		/* Lägg in personer i Adext.ldapgrps. */
+		proc append base=temp_ldapgrps data=pers force;
+		run;
+
+		/* Finns gruppen redan inläst från AD ska den inte hämtas in igen. */
+		data anvand (keep=member);
+			set grps;
+		run;
+
+		data nytrad (keep=member);
+			set grps;
+		run;
+
+		proc datasets lib=work nolist;
+			delete nytrad2;
+		quit;
+
+		%let nytrad_id = %sysfunc(open(NYTRAD));
+		%let antal = %sysfunc(attrn(&nytrad_id, NOBS));
+
+		/* Loopen ska avslutas om det inte finns mer medlemsgrupper att hämta in. */
+		%if &antal le 0 %then %do;
+			%let igen = 0;
+		%end;
+		%else %if &antal > 0 %then %do;
+			%let igen = 1;
+		%end;
+		%else %do;
+			%put ERROR: Fel i macrot vanligaADGrupper. Klarar inte av att hantera &=antal;
+		%end;
+
+
+		%let nytrad_id = %sysfunc(close(&nytrad_id));
+		%put inaktiverar notes;
+		options nonotes;
+
+		* Om det finns grupper i grupper;
+		%do %while (&igen = 1);
+			%if %sysfunc(exist(NYTRAD2)) %then %do;
+				data nytrad;
+					set nytrad2;
 				run;
-			%end; /* end: if index = 1 */
-			%else %do;
-			proc append base=nytrad2 data=grps force;
-			run;
-			%end; /* end: else do */
-			%end; /* end: do while (sysfunc(fetch(NYTRAD)) = 0); */ 
+			%end;
+
+			%let index = 0;
+
+			* Index: används för att räkna antal loopar;
+			%let nytrad_id = %sysfunc(open(NYTRAD));
+
+			* loop through nytrad;
+			%do %while (%sysfunc(fetch(&nytrad_id)) = 0);
+				%let index = %eval(&index + 1);
+				%let member = %sysfunc(getvarc(&nytrad_id, %sysfunc(varnum(&nytrad_id, MEMBER))));
+
+				* Hämtar member från AD.;
+				%ADGroupFilter(filter=&member);
+
+				data pers grps;
+					set ldapgrps;
+
+					if missing(member) then delete;
+
+					* Om member är en person ska de flyttas till huvudgruppen;
+					if length(member) in (6,8) and (
+							index(member,'1') or index(member,'2') or index(member,'3') or index(member,'4') or index(member,'5') or
+							index(member,'6') or index(member,'7') or index(member,'8') or index(member,'9') or index(member,'0')
+						) then do;
+						name = "&x_name";
+						grouptype = "&x_grouptype";
+						description = "&x_description";
+						samaccountname = "&x_samaccountname";
+						distinguishedname = "&x_distinguishedname";
+						output pers;
+					end;
+					else do;
+						output grps;
+					end;
+				run;
+
+				/* Lägg in personer i Adext.ldapgrps. */
+				proc append base=temp_ldapgrps data=pers force;
+				run;
+
+				/* Finns gruppen redan inläst från AD ska den inte hämtas in igen. */
+				proc sql noprint;
+					delete from grps
+					where member in (select member from anvand);
+				quit;
+
+				proc append base=anvand data=grps (keep=member);
+				run;
+
+				* Om första loopen;
+				%if &index = 1 %then %do;
+					data nytrad2;
+						set grps;
+					run;
+				%end; /* end: if index = 1 */
+				%else %do;
+					proc append base=nytrad2 data=grps force;
+					run;
+				%end; /* end: else do */
+
+			%end; /* end: do while (sysfunc(fetch(NYTRAD)) = 0); */
+
 			%let nytrad_id = %sysfunc(close(&nytrad_id));
-	  	
 			%let nytrad2_id = %sysfunc(open(NYTRAD2));
-			%let antal = %sysfunc(attrn(&nytrad2_id, NOBS)); 
-			/* Loopen ska avslutas om det inte finns mer medlemsgrupper att hämta in. */ 
+			%let antal = %sysfunc(attrn(&nytrad2_id, NOBS));
+
+			/* Loopen ska avslutas om det inte finns mer medlemsgrupper att hämta in. */
 			%if &antal le 0 %then %let igen = 0;
-			%if &antal > 0 %then %let igen = 1;
+			%else %if &antal > 0 %then %let igen = 1;
 			%let nytrad2_id = %sysfunc(close(&nytrad2_id));
-		
+
 		%end; /* end: do until igen = 1 */
 
-	%end; /* end: do while fetch(NYAGRUPPER) */
-	%let ny_id = %sysfunc(close(&ny_id));
-  
-  proc sort data=temp_ldapgrps out=ldapgrps dupout=duppiduppi nodupkey;
-		by name distinguishedname grouptype member;
-	run;
+		%put Aktiverar notes;
+		options notes;
 
-	proc append base=adext.ldapgrps data=ldapgrps;
-	run;
+	%end; /* end: do while fetch(NYAGRUPPER) */
+
+	%let ny_id = %sysfunc(close(&ny_id));
 
 %mend vanligaADGrupper;
 
 
 
-/* Start: Anpassning LUL. */
-/* I AD:s SAS-grupper kan IT-samordnare lägga in vanliga AD-grupper (typ -Users -Users-FIM). */
-/* För varje AD-grupp som inte har ändelsen -SAS görs ny sökning mot AD för att hämta upp medlemmar. */
-
-%put Inaktiverar loggning ;
-filename slask dummy '/tmp/slask.log';
-proc printto log=slask new;
-run;
 
 %vanligaADGrupper;
 
-proc printto;
+
+
+
+
+
+proc sort data=temp_ldapgrps out=ldapgrps dupout=duppiduppi nodupkey;
+	by name distinguishedname grouptype member;
 run;
+
+proc append base=adext.ldapgrps data=ldapgrps;
+run;
+
+
 
 /* Slut: Anpassning LUL. */
