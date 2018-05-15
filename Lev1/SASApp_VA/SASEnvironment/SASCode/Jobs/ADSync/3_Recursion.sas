@@ -43,6 +43,12 @@
 		run;
 	%end;
 	%let rerun = 0;
+
+	%put Inaktiverar loggning 
+	filename slask dummy;
+	proc printto log=slask;
+	run;
+
 	%do i=1 %to &name_len;
 		/* test whether this is already done */
 		proc sql noprint;
@@ -63,6 +69,10 @@
 
 		%end;
 	%end;
+
+	proc printto;
+	run;
+
 	%if &rerun eq 1 %then %do;
 		%Recursion;
 	%end;
@@ -244,7 +254,7 @@
 	proc append base=adext.ldapgrps data=ldapgrps;
 	run;
 
-%mend;
+%mend vanligaADGrupper;
 
 %Recursion(firsttime=1);
 
