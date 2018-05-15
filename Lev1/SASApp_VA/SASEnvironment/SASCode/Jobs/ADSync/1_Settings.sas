@@ -14,9 +14,6 @@ options
 	;
 
 
-/* Allocation of FimObjects; */
-%let dwlib = luldw; 
-
 /*Specify the directory for the extracted AD data (master tables).  */
 libname adExt "&ADSyncStaging/ADExtract";
 

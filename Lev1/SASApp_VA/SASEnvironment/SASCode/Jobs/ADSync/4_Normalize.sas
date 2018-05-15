@@ -20,12 +20,12 @@ run;
 
 * Kontrollerar att fimObjects innehåller rader.;
 proc sql noprint;
-   select count(*) into :fimobjects_nobs from &dwlib..fimobjects;
+   select count(*) into :fimobjects_nobs from LULDW.fimobjects;
 quit;
 
 data _null_;
    if &fimobjects_nobs eq 0 then do;
-      put "ERROR: The dataset &dwlib..fimobjects contains no observations.";
+      put "ERROR: The dataset LULDW.fimobjects contains no observations.";
       put "ERROR: Cancelling execution of submitted statements.";
       abort cancel 3;
    end;
@@ -234,7 +234,7 @@ data adExt.ldapusers
 	    postalCode $20 name $60 sAMAccountName $20 st $20 telephoneNumber $50
 	    co $50 /*title $50*/ whenChanged $30 whenCreated $30;
 
-	set &dwlib..fimobjects (where=(username not is missing)keep= firstname middlename lastname title fullpath email username enddate);
+	set LULDW.fimobjects (where=(username not is missing)keep= firstname middlename lastname title fullpath email username enddate);
 	if middlename ne "" then DisplayName= trim(FirstName)||' '||trim(MiddleName)||' '||trim(LastName);
 	else if middlename eq "" then DisplayName= trim(FirstName)||' '||trim(LastName);
   * Ta bara med de med gällande anställning;
