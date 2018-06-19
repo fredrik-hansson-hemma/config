@@ -7,6 +7,8 @@
  * Om testmiljö, blir det datalagret test.
  *****************************************************/
 %macro get_dwlib();
+
+	/***********
 	%local dwlib;
 	%let metas = %sysfunc(getoption(METASERVER));
 	%let env = %sysfunc(scan(&metas, 1, '-'));
@@ -19,9 +21,22 @@
 	%end;
 
 	&dwlib
+	******************/
+
+	%put NOTE: Macrot get_dwlib returnerar alltid "luldw" eftersom vi nu för tiden använder det namnet på libnamet i både test och produktionsmiljö. ;
+	%put NOTE: (I testmiljön pekar luldw förstås på datalagrets testmiljö.);
+
+	luldw
 
 %mend;
 
-/* Exempel på anrop: */
-%*let dw = %get_dwlib();
-%*put DW: &dw;
+/* Exempel på anrop: * /
+%let dw = %get_dwlib();
+%put DW: &dw;
+
+%put %get_dwlib();
+
+%put tralla %get_dwlib() tralla ;
+
+
+/*************/
