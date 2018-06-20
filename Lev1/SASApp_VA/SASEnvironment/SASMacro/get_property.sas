@@ -9,7 +9,7 @@
 					property=);
 
 
-	%put Macro get_property: Hämtar propertyn &property från filen &propertyfile;
+	%put Macro get_property: Hämtar propertyn &property från filen &propertyfile och sparar i globala macrovariabel: %upcase(&property);
 	options nonotes;
 	filename properti "&propertyfile";
 
@@ -26,7 +26,8 @@
 		if upcase(property)="%upcase(&property)" then do;
 			* Lagra värdet i en global macrovariabel som heter som propertyn.	;
 			call symputx("&property", value, 'G');
-			put "Macro get_property: Sätter följande globala macrovariabel: %upcase(&property)=" value;
+			* Bortkommenterad av säkerhetsskäl (ibland hämtas lösenord som inte ska skrivas till loggen)	;
+			* put "Macro get_property: Hämtar värde från &propertyfile och sparar i globala macrovariabel: %upcase(&property)=" value;
 			put ;
 			* Avsluta därefter datasteget.										;
 			stop;
