@@ -23,6 +23,16 @@
 
 
 
+* ===============================================================================	;
+* Verkar inte alltid vara nödvändigt, men kan behövas för att slippa
+* "ER ROR: Unable to connect to Metadata Server"
+* ===============================================================================	;
+options metaserver="&metaserver"
+	metaport=8561
+	metauser="sasadm@saspw"
+	metapass="&sasadm_pass"
+	metarepository="Foundation";
+
 
 
 
@@ -35,7 +45,12 @@ options set=GRIDINSTALLLOC=" /opt/sas/TKGrid";
 options validvarname=any validmemname=extend;
 
 LIBNAME VAPUBLIC BASE "/opt/sas/config/Lev1/AppData/SASVisualAnalytics/VisualAnalyticsAdministrator/PublicDataProvider";
-LIBNAME LASRLIB SASIOLA  TAG=VAPUBLIC  PORT=10031 HOST="&lasrserver"  SIGNER="https://&lasr_signer_server:&lasr_signer_port/SASLASRAuthorization";
+%put &=SYSLIBRC;
+LIBNAME LASR_LIB SASIOLA  TAG=VAPUBLIC  PORT=10031 HOST="&lasrserver"  SIGNER="https://&lasr_signer_server:&lasr_signer_port/SASLASRAuthorization";
+%put &=SYSLIBRC;
+%put NOTE: Här går något galet när koden körs i testmiljön!	;
+%put NOTE: Inga tabeller hittas i LASR-libname:et även om det finns tabeller som är laddade i lasr. Förstår inte varför och hinner inte läga mer tid på att felsöka. :-(	;
+
 
 * Hämtar alla tabeller som finns i Public Data Provider.;
 proc sql noprint;
@@ -57,7 +72,7 @@ run;
 * Hämtar alla tabeller som finns i LASR servern.;
 ods _all_ close;
 ods output Members=work.lasrtables;
-proc datasets library=LASRLIB memtype=data;
+proc datasets library=LASR_LIB memtype=data;
 run;
 quit;
 ods _all_ close;
@@ -69,7 +84,6 @@ ods _all_ close;
 data work.lasrtables(rename=(name=memname) index=(memname));
 	length name $32;
 	set work.lasrtables(keep=name);
-	if "&vatable" ne "" and upcase(name) NE "&vatable" then delete;
 run;
 
 
@@ -80,6 +94,7 @@ run;
 data work.load_publicLASR;
 	merge	work.pdptables(in=in_pdp)
 			work.lasrtables(in=in_lasr);
+	by memname;
 	if in_pdp and not in_lasr;
 run;
 
@@ -109,6 +124,12 @@ data _null_;
 	put '	metauser="sasadm@saspw"';
 	put "	metapass=""&sasadm_pass""";
 	put '	metarepository="Foundation";';
+	put ' ';
+	put ' ';
+	put ' ';
+	put ' ';
+	put '	* Inget viktigt ska skrivas ut, men öppnar en ods-destination i alla fall för att slippa onödiga varningar om att ingen "output destination" är öppen.	;';
+	put '	ods html path="/tmp" file="load_lasrfromhadoop_&tag._&sysdate._&systime..html" gpath="/tmp";';
 
 run;
 
@@ -148,21 +169,18 @@ run;
 
 
 
+data _null_;
+	file publ_pgm mod encoding='utf-8';
+	put 'ods _all_ close;';
+run;
 
 
 
 
 
 
-* ===============================================================================	;
-* Verkar inte alltid vara nödvändigt, men kan behövas för att slippa
-* "ER ROR: Unable to connect to Metadata Server"
-* ===============================================================================	;
-options metaserver="&metaserver"
-	metaport=8561
-	metauser="sasadm@saspw"
-	metapass="&sasadm_pass"
-	metarepository="Foundation";
+
+
 
 
 
