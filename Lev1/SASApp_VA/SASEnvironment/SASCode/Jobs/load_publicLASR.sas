@@ -69,9 +69,7 @@ ods _all_ close;
 data work.lasrtables(rename=(name=memname) index=(memname));
 	length name $32;
 	set work.lasrtables(keep=name);
-	%if "&vatable" ne "" %then %do;
-		where upcase(name) = "&vatable"
-	%end;
+	if "&vatable" ne "" and upcase(name) NE "&vatable" then delete;
 run;
 
 
@@ -94,7 +92,7 @@ run;
 * Detta program inkluderas sedan.									;
 
 
-filename publ_pgm "/tmp/load_publicLASR_genererat_program.sas";
+filename publ_pgm "/tmp/load_publicLASR_genererat_program_&sysdate._&systime.sas";
 
 data _null_;
 	file publ_pgm encoding='utf-8';
@@ -172,7 +170,7 @@ options metaserver="&metaserver"
 
 
 %put Inkluderar programmet som genererades ovan: ;
-%include '/tmp/load_publicLASR_genererat_program.sas' /source2;
+%include publ_pgm /source2;
 
 
 
