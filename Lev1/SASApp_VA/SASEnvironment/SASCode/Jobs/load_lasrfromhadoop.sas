@@ -1,5 +1,5 @@
 /*********************************************
- * Macro: Load_LASRfromHadoop_bst
+ * Macro: Load_LASRfromHadoop
  * Laddar tabeller från Hadoop in i LASR servern.
  * Skriver ut de tabeller som ska laddas till Hadoop i tabell
  * LOG
@@ -25,21 +25,39 @@
 		%put Tabell &vatable från Hadoop kommer att laddas in i LASR-minnet.;
 	%end;
 
-	%LET VDB_GRIDHOST=bs-ap-20.lul.se;
+	%LET VDB_GRIDHOST=&lasrserver;
 	%LET VDB_GRIDINSTALLLOC=/opt/sas/TKGrid;
-	options set=GRIDHOST="bs-ap-20.lul.se";
+	options set=GRIDHOST="&lasrserver";
 	options set=GRIDINSTALLLOC="/opt/sas/TKGrid";
 	options validvarname=any validmemname=extend noerrorabend;
 
-	proc printto print='/tmp/procoutput.lst';
+	proc printto print='/tmp/load_lasrfromhadoop_&tag._&sysdate._&systime..lst';
 	run;
 
+	
+	LIBNAME HADOOP SASHDAT  PATH="&path"  SERVER="&lasrserver"  INSTALL="/opt/sas/TKGrid";
+	%if &SYSLIBRC NE 0 %then %do;
+		%put ====================================================================================================================================	;
+		%put %str(ER)ROR: Misslyckades att skapa libname. Kontrollera om hadoop-libnamet existerar i den här miljön. (SERVER="&lasrserver" PATH="&path")	;
+		%put ====================================================================================================================================	;
+		%return;
+	%end;
 
-	%* Olika Signer per LASR-server.;
-	LIBNAME LASR SASIOLA  TAG=&tag  PORT=&port HOST="bs-ap-20.lul.se"  SIGNER="&signer";
-	LIBNAME HADOOP SASHDAT  PATH="&path"  SERVER="bs-ap-20.lul.se"  INSTALL="/opt/sas/TKGrid";
+	LIBNAME LASR SASIOLA  TAG=&tag  PORT=&port HOST="&lasrserver"  SIGNER="&signer";
+	%if &SYSLIBRC NE 0 %then %do;
+		%put ====================================================================================================================================	;
+		%put %str(ER)ROR: Misslyckades att skapa libname. Kontrollera om LASR-servern existerar i den här miljön. (HOST="&lasrserver" PORT=&port)	;
+		%put ====================================================================================================================================	;
+		%return;
+	%end;
+
 
 	
+
+	* Delete:ar eventuella gamla tabeller	;
+	%deltable(tables=	work.hadooptables
+						work.lasrtables
+						work.loadtablesfromhadoop_&tag)
 
 	* Hämtar alla tabeller som finns i Hadoop.																		;
 	%* Det här skulle kunna gå att göra mycket enklare med hjälp av en SQL mot dictionary.tables, men det ta		;
@@ -74,6 +92,14 @@
 	run;
 	quit;
 	ods _all_ close;
+
+	%put **&sysdate._&systime**;
+
+
+	* Inget viktigt ska skrivas ut, men öppnar en ods-destination i alla fall för att slippa onödiga varningar om att ingen "output destination" är öppen.	;
+	ods html path="/tmp" file="load_lasrfromhadoop_&tag._&sysdate._&systime..html" gpath="/tmp";
+
+
 
 	data work.lasrtables(rename=(name=memname));
 		length name $32;
@@ -117,12 +143,14 @@
 			data=HADOOP.&loadtable
 			signer="&signer"
 			add noclass;
-    		performance host="bs-ap-20.lul.se";
+    		performance host="&lasrserver";
 		run;
 
 	%end;
 
 	%let dsid = %sysfunc(close(&dsid));
+
+	ods _all_ close;
 
 	proc printto;
 	run;
@@ -133,9 +161,24 @@
 
 	%put EXIT: load_lasrfromhadoop_bst;
 
+
 %mend load_lasrfromhadoop;
 
 
+
+
+* Hämtar värden från en property-fil, för att kunna använda det här programmet i både test- och prodmiljöer	;
+%get_property(property=metaserver)
+%get_property(property=lasrserver)
+%get_property(property=sasadm_pass)
+%get_property(property=lasr_signer_port)
+%get_property(property=lasr_signer_server)
+
+* Verifierar att värden har hämtats		;
+%put &=metaserver;
+%put &=lasrserver;
+%put &=lasr_signer_port;
+%put &=lasr_signer_server;
 
 
 
@@ -143,24 +186,43 @@
 * Verkar inte alltid vara nödvändigt, men kan behövas för att slippa
 * "ER ROR: Unable to connect to Metadata Server"
 * ===============================================================================	;
-options metaserver="bs-ap-20.lul.se"
+options metaserver="&metaserver"
 	metaport=8561
 	metauser="sasadm@saspw"
-	metapass="{sas002}7D55EB1F27B29BC354FD035416238B741C2BF86732381F40"
+	metapass="&sasadm_pass"
 	metarepository="Foundation";
+
+
+
+
+
+
+
+
+/*
+%let TAG=epj;
+%let PATH=/epj;
+%let PORT=10015;
+%let SIGNER=https://&lasr_signer_server:&lasr_signer_port/SASLASRAuthorization;
+*/
+
+
 
 
 * mprint underlättar copy-paste från loggen om man skulle behöva köra om något	;
 options mprint;
 
-* Anrop	;
-%load_lasrfromhadoop(VATABLE=, TAG=hps, PATH=/hps, PORT=10011, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
-%load_lasrfromhadoop(VATABLE=, TAG=epj, PATH=/epj, PORT=10015, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
-%load_lasrfromhadoop(VATABLE=, TAG=lrc, PATH=/lrc, PORT=10016, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
-%load_lasrfromhadoop(VATABLE=, TAG=ftv, PATH=/ftv, PORT=10017, SIGNER=https://rapport.lul.se:443/SASLASRAuthorization);
 
 
+* Anrop (Flera av lasr-servrarna finns inte i testmiljön ännu. Det kommer att resultera i errors.)	;
+%load_lasrfromhadoop(VATABLE=, TAG=hps,			PATH=/hps,			PORT=10011, SIGNER=https://&lasr_signer_server:&lasr_signer_port/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=epj,			PATH=/epj,			PORT=10015, SIGNER=https://&lasr_signer_server:&lasr_signer_port/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=lrc,			PATH=/lrc,			PORT=10016, SIGNER=https://&lasr_signer_server:&lasr_signer_port/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=ftv,			PATH=/ftv, 			PORT=10017, SIGNER=https://&lasr_signer_server:&lasr_signer_port/SASLASRAuthorization);
+%load_lasrfromhadoop(VATABLE=, TAG=metavision,	PATH=/metavision,	PORT=10018, SIGNER=https://&lasr_signer_server:&lasr_signer_port/SASLASRAuthorization);
 
+
+options nomprint;
 
 
 * ===============================================================================	;
@@ -171,15 +233,15 @@ options mprint;
 %let TAG=hps;
 %let PATH=/hps;
 %let PORT=10011;
-%let SIGNER=https://rapport.lul.se:443/SASLASRAuthorization;
+%let SIGNER=https://&lasr_signer_server:&lasr_signer_port/SASLASRAuthorization;
 
-LIBNAME LASR SASIOLA  TAG=&tag  PORT=&port HOST="bs-ap-20.lul.se"  SIGNER="&signer";
-LIBNAME HADOOP SASHDAT  PATH="&path"  SERVER="bs-ap-20.lul.se"  INSTALL="/opt/sas/TKGrid";
+LIBNAME LASR SASIOLA  TAG=&tag  PORT=&port HOST="&lasrserver"  SIGNER="&signer";
+LIBNAME HADOOP SASHDAT  PATH="&path"  SERVER="&lasrserver"  INSTALL="/opt/sas/TKGrid";
 
 proc lasr port=&port
 	data=HADOOP.&VATABLE
 	signer="&signer"
 	add noclass;
-	performance host="bs-ap-20.lul.se";
+	performance host="&lasrserver";
 run;
-*********/
+/*********/
