@@ -72,6 +72,10 @@ run;
 /* Step 4: Check the difference for errors */
 %mduchgv(change=metaUpd, target=metaExt, temp=work, errorsds=work.mduchgverrors);
 
+
+
+
+
 /* Start: Anpassning LUL */
 * Rensar logintabellen.;
 data metaUpd.logins_delete;
@@ -107,6 +111,11 @@ run;
 /* Slut: Anpassning LUL */
 
 
+
+
+
+
+
 %include "&ADSyncPgm./6_Report.sas";
 
 /* Step 5: Import the differences to the Metadata */
@@ -117,7 +126,7 @@ run;
     
 		filename outbox email 
 	  to=("magnus.knopf@akademiska.se" "peter.ostrom@akademiska.se" "fredrik.hansson@regionuppsala.se") 
-	  subject="ADSynk stoppad. Rensa bland SAS-grupper och användarkonton";
+	  subject="ADSynk stoppad. Rensa bland SAS-grupper och användarkonton - från &SYSHOSTNAME";
 
     data _null_;
       file outbox;
@@ -133,7 +142,3 @@ run;
 	/* Slut: LUL anpassning. */
 %mend;
 %exec_mduchglb;
-
-
-
-
