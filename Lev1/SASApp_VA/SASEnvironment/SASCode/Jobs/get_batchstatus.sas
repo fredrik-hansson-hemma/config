@@ -176,6 +176,8 @@ ods listing;
 
 	%if &antalerror ne 0 %then %do;
 		%let subject = Status batch - jobb i error;
+
+		/********* Endast bifogade filer	********* 
 		filename outbox email 
 			to=(&to_beslutstod_error) 
 			subject="&subject"
@@ -186,13 +188,12 @@ ods listing;
 			file outbox;
 			put "Status från batchkörning &today.";
 		run;
+		/********* ********* ********* ********* *********/ 
 
-
-		***************************************************************************;
-		* Såhär kan man skicka HTML i mailets body, istället för att bifoga html-filer. Observera att man i exemplet endast skickar "error", inte "complete".	;
-		***************************************************************************;
+		
+		/*********	HTML i mailets body	*********/
 		filename outbox email
-			to=("fredrik.hansson@regionuppsala.se")
+			to=(&to_beslutstod_error)
 			subject="&subject"
 			content_type="text/html"
 			attach=("&path./completejobs.html" "&path./errorjobs.html")
@@ -204,11 +205,10 @@ ods listing;
 		  input;
 		  put _infile_;
 		run;
+		/********* ********* ********* ********* *********/ 
 
 		filename outbox clear;
-		***************************************************************************;
-		* Slut på test av HTML-mail.	;
-		***************************************************************************;
+		
 
 	%end;
 	%else %do;
@@ -216,7 +216,7 @@ ods listing;
 	%end;
 
 	%if &antalerror_ftv ne 0 %then %do;
-		%let subject = Status batch Beslutsstöd - jobb i error;
+		%let subject = Status batch Beslutsstöd/FTV - jobb i error;
 		filename outbox email 
 			to=(&to_ftv_error) 
 			subject="&subject"
@@ -230,7 +230,7 @@ ods listing;
 
 	%end;
 	%else %do;
-		%let subject = Status batch Beslutstöd - jobb ok!;
+		%let subject = Status batch Beslutstöd/FTV - jobb ok!;
 		filename outbox email 
 			to=(&to_ftv_ok) 
 			subject="&subject"
@@ -245,7 +245,7 @@ ods listing;
 	%end;
 
 	%if &antalerror_epj ne 0 %then %do;
-		%let subject = Status batch Beslutsstöd - jobb i error;
+		%let subject = Status batch Beslutsstöd/EPJ - jobb i error;
 		filename outbox email 
 			to=(&to_epj_error) 
 			subject="&subject"
@@ -259,7 +259,7 @@ ods listing;
 
 	%end;
 	%else %do;
-		%let subject = Status batch Beslutstöd - jobb ok!;
+		%let subject = Status batch Beslutstöd/EPJ - jobb ok!;
 		filename outbox email 
 			to=(&to_epj_ok) 
 			subject="&subject"
