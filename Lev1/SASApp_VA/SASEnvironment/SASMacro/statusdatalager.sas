@@ -52,7 +52,7 @@
 
 		%if %upcase("&polla") = "NEJ" %then %do;
 			* Datalagret är inte klart att läsa ännu.;
-			%put Loadstatus är &loadstatus..Datalagret är inte klart att läsa ännu. Programmet avbryts.;
+			%put %STR(ER)ROR: Loadstatus är &loadstatus.. Datalagret är inte klart att läsa ännu. Programmet avbryts.;
 			%abort cancel 9;
 		%end;
 
@@ -85,6 +85,8 @@
 			%end;
 
 			%* Avbryter programmet efter ett antal försök.	;
+			* Datalagret är inte klart att läsa ännu.;
+			%put %STR(ER)ROR: Datalagret är inte klart att läsa. Gör inga fler försök. Programmet avbryts.;
 			%abort return 9;
 		%end;
 		%else %do;
@@ -97,7 +99,7 @@
 	%* loadstatus har ett oväntat värde. Programmet avbryts.	;
 	%else %do;
 		* Fel värde för loadstatus.;
-		%put Loadstatus är &loadstatus.. Värde 0 eller 1 förväntas. Programmet avbryts.;
+		%put %STR(ER)ROR: Loadstatus är &loadstatus.. Värde 0 eller 1 förväntas. Programmet avbryts.;
 		%abort cancel;
 	%end;
 
