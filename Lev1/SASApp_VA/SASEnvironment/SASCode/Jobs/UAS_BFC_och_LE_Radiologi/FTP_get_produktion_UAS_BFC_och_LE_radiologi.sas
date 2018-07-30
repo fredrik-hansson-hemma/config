@@ -147,6 +147,12 @@ proc format lib=work;
 		'BFC onkologi' = 'Molekulär bilddiagnostik'
 		'BFC PET-centrum' = 'Molekulär bilddiagnostik'
 		other = 'BORT';
+
+	* Från och med 2018-06-01 finns en ny sektion. Skapar därför ett nytt format.	;
+	value $sektion_2018_06_01_v
+		'BFC hjärta' = 'Thorax'
+		'BFC thorax' = 'Thorax'
+		other = [$sektion30.];
 quit;
 
 
@@ -179,7 +185,14 @@ data work.BFC_LE_deriverade_variabler;
 
 	* Gäller endast BFC		;
 	if substr(Utforande_enhet, 1,3)="BFC" then do;
-		sektion = put(visitreqgr, $sektion.);
+
+		* Från och med 2018-06-01 finns en ny sektion.	;
+		if bookdate LT '01JUN2018'd then do;
+			sektion = put(visitreqgr, $sektion.);
+		end;
+		else do;
+			sektion = put(visitreqgr, $sektion_2018_06_01_v.);
+		end;
 	end;
 
 	drop METHODS_DESC;
