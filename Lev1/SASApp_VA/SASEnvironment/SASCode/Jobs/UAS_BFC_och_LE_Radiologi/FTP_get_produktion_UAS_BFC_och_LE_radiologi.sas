@@ -165,15 +165,8 @@ data work.BFC_LE_deriverade_variabler;
 
 	* Beräknar kolumnerna d_methods_desc och metodgrupp		;
 	if bokningstyp in('Eftergranskning med arkivering' 'Eftergranskning utan arkivering') then do;
-		* Eftergranskning kallas "SKYLT" för BFC			;
-		if substr(Utforande_enhet, 1,3)="BFC" then do;
-			d_methods_desc='SKYLT';
-			metodgrupp = 'Skylt';
-		end;
-		else do;
-			d_methods_desc='Eftergranskning';
-			metodgrupp = 'Eftergranskning';
-		end;
+		d_methods_desc='Eftergranskning';
+		metodgrupp = 'Eftergranskning';
 	end;
 	else do;
 		d_methods_desc=methods_desc;
@@ -312,13 +305,13 @@ data bfcdata.BFC_i_nya_formatet / view=bfcdata.BFC_i_nya_formatet;
 		SIGNDOC2_NAME length=$70
 		ADM_CODE  length=$30
 		RDRESCODE length=$7
-		metodgrupp length=$20;
+		metodgrupp length=$20 format=$20.
+		VISITREQGR length=$30
+		d_methods_desc length=$15;
 
 	set bfcdata.BFC(rename=(DLOCATION_DESC=DLOCATION_DESC_old
 							METHODS_DESC=METHODS_DESC_old));
 	rename
-		
-		methods_desc=d_methods_desc
 		ADM_CODE=KomplStatus;
 
 	* Om man bara satte om längden på de här variblerna, blev det felmeddelanden i loggen.
@@ -335,9 +328,11 @@ data bfcdata.BFC_i_nya_formatet / view=bfcdata.BFC_i_nya_formatet;
 	* Skapar variabel som visar att data hör till BFC. Den fanns inte tidigare eftersom allt data då hörde till BFC	;
 	Utforande_enhet="BFC historik";
 
-	if metodgrupp = 'Undersökn.' then do;
-		metodgrupp = 'Undersökning';
-	end;
+	if metodgrupp = 'Undersökn.'	then metodgrupp = 'Undersökning';
+	if metodgrupp = 'Skylt'			then metodgrupp = 'Eftergranskning';
+
+	if methods_desc = 'SKYLT'		then d_methods_desc = 'Eftergranskning';
+	else d_methods_desc=methods_desc;
 
 	* Initialiserar variabel för att slippa meddelande i loggen	;
 	call missing(Forskning);
@@ -345,6 +340,7 @@ data bfcdata.BFC_i_nya_formatet / view=bfcdata.BFC_i_nya_formatet;
 	drop
 		did
 		REQGR_ANSVAR
+		methods_desc
 		;
 run;
 
