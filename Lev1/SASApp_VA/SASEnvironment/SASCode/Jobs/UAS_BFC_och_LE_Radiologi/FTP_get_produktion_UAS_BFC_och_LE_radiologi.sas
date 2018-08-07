@@ -354,10 +354,18 @@ proc append base=bfcdata.bfc_och_enkoping_radiologiskt_ce
 	data=bfcdata.BFC_i_nya_formatet(obs=0);
 run;
 
+* Månader som finns i bfcdata.bfc_och_enkoping_radiologiskt_ce ska _inte_ läsas från bfcdata.bfc_i_nya_formatet.	;
+* Hämtar därför en lista över vilka perioder som finns inlästa i bfcdata.bfc_och_enkoping_radiologiskt_ce.			;
+proc SQL noprint;
+	select distinct put(bookdate, yymmn6.) into :periods separated by '" "'
+	from bfcdata.bfc_och_enkoping_radiologiskt_ce;
+quit;
+
+
 * Om append ovan går igenom utan varningar eller fel, är det fritt fram att skapa en vy där man 
 * slår ihop de båda dataseten.																	;
 data bfcdata.prod_UAS_BFC_och_LE_radiologi(label="BFC historiskt data + BFC-data och Lasarettet i Enköping Radiologiskt centrum-data") / view=bfcdata.prod_UAS_BFC_och_LE_radiologi;
-	set bfcdata.bfc_i_nya_formatet
+	set bfcdata.bfc_i_nya_formatet(where=(put(bookdate, yymmn6.) not in("&periods")))
 		bfcdata.bfc_och_enkoping_radiologiskt_ce;
 run;
 
@@ -387,51 +395,106 @@ run;
 
 
 
-/****************
 
-* Test			;
-data work.test;
-	set bfcdata.BFC_och_Enkoping_radiologiskt_ce;
-	where bookdate between '01JUN2016'd and '30JUN2016'd
-	  
-	  and VISITREQGR = "LE Radiologiskt centrum"; *
-	  and d_METHODS_DESC in('DT', 'INTERVENTION', 'KONV RTG', 'MR', 'ULJ' 'Eftergranskning') ;
-	  * and Bokningstyp IN('Akut', 'Drop-in', 'Generell');
+
+
+
+
+* Skapar tabell som innehåller de labels som ska användas	;
+data bfcdata.bfc_och_enkoping_labels;
+	attrib
+		VATABLE  length=$256
+		columnname length=$50
+		ColumnLabel length=$256;
+	do VATABLE="PRODUKTION_LE_RADIOLOGI", "PRODUKTION_UAS_BFC";
+		columnname="RREQNR";
+		ColumnLabel="Remissnr";
+		output;
+		columnname="DBOOKNR";
+		ColumnLabel="Bokn.nr";
+		output;
+		columnname="BOOKTIME";
+		ColumnLabel="Tid";
+		output;
+		columnname="RDSTUDYNR";
+		ColumnLabel="Löpnr";
+		output;
+		columnname="Utforande_enhet";
+		ColumnLabel="Utförande enhet";
+		output;
+		/* bokningstyp */
+		columnname="USPRIO";
+		ColumnLabel="Önskad prio";
+		output;
+		columnname="d_methods_desc";
+		ColumnLabel="Metod";
+		output;
+		columnname="DLOCATION_DESC";
+		ColumnLabel="Rum / Labb";
+		output;
+		/* Forskning	*/
+		columnname="STATUS";
+		ColumnLabel="Status";
+		output;
+		columnname="SIGNDOC1_NAME";
+		ColumnLabel="Preliminärsvar av";
+		output;
+		columnname="SIGNDOC2_NAME";
+		ColumnLabel="Slutsignerad av";
+		output;
+		columnname="KomplStatus";
+		ColumnLabel="Admin.typ";
+		output;
+		columnname="RDRESCODE";
+		ColumnLabel="Kod";
+		output;
+		columnname="metodgrupp";
+		ColumnLabel="Undersökn./Eftergranskn.";
+		output;
+		columnname="VISITREQGR";
+		ColumnLabel="Rem.grupp";
+		output;
+		columnname="BOOKDATE";
+		ColumnLabel="Datum";
+		output;
+		columnname="DOCTOR_NAME";
+		ColumnLabel="Dikterad av";
+		output;
+		columnname="SIGN1DATUM";
+		ColumnLabel="Sign1.datum";
+		output;
+		columnname="SIGN2DATUM";
+		ColumnLabel="Sign2.datum";
+		output;
+		columnname="RESCODE_DESC";
+		ColumnLabel="Undersökningskod";
+		output;
+		columnname="sektion";
+		ColumnLabel="Sektion";
+		output;
+	end;
 run;
 
-
-********************/
-
-
-
-/******************
-* Fejka data för fler år	;
-data bfcdata.BFC_och_Enkoping_radiologiskt_ce;
-	set bfcdata.BFC_och_Enkoping_radiologiskt_ce;
-
-	* Om det inte är Enköping, så plusar vi på två år (eftersom 201606 och 201607 redan finns i BFC-datat)	;
-	if VISITREQGR NE "LE Radiologiskt centrum" then do;
-		bookdate=intnx('YEAR', bookdate, 2, 'SAME');
-	end;
-	output;
-
-	* Om det är enköping, så kopierar vi test-data så att det fyller ut ett par år	;
-	if VISITREQGR = "LE Radiologiskt centrum" then do;
-		do i = 1 to 11;
-			* plusar på två månader på varje rad och skriver ut	;
-			bookdate=intnx('MONTH', bookdate, 2, 'SAME');
-			output;
-		end;
-	end;
-	drop i;
+/*********************************************************************************
+Den här koden ligger i "efterbehandla" när man skapar lasr-tabellerna
+**********************************************************************************
+data work.labels / view=work.labels;
+	set bfcdata.bfc_och_enkoping_labels;
+	where VATABLE="PRODUKTION_LE_RADIOLOGI";
 run;
+%set_labels(	vatable=PRODUKTION_LE_RADIOLOGI,
+				tabledescription=NULL,
+				lables_table=work.labels	);
+
+* och ...	;
+
+data work.labels / view=work.labels;
+	set bfcdata.bfc_och_enkoping_labels;
+	where VATABLE="PRODUKTION_UAS_BFC";
+run;
+%set_labels(	vatable=PRODUKTION_UAS_BFC,
+				tabledescription=NULL,
+				lables_table=work.labels	);
 
 
-* Tar bort LE:s fejk-data	;
-proc sql noprint;
-	delete from bfcdata.BFC_och_Enkoping_radiologiskt_ce
-	where VISITREQGR = "LE Radiologiskt centrum" and put(bookdate, yymmn6.) not in("201606" "201607");
-quit;
-/******************/
-
-* /LUL/Lasarettet i Enköping/Verksamhetsområde radiologi ;
+**********************************************************************************/
