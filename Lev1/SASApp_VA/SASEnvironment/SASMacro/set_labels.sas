@@ -12,7 +12,9 @@
 * (sätter rubriker samt beskrivning på tabell Ekonomi.)  
 ************************************/
 
-%macro set_labels(vatable=, tabledescription=NULL);
+%macro set_labels(	vatable=,
+					tabledescription=NULL,
+					lables_table=&dwlib..vw_viewlabels	);
 
 %put ENTER: set_labels;
 %if "VATABLE" = "" %then %do;
@@ -122,8 +124,10 @@ run;
 
 *hämtar kolumndefinitionerna från look-up-tabell i datalagret;
 data viewdef;
-	set &dwlib..vw_viewlabels (keep=ColumnLabel columnname);
+	set &lables_table (keep=ColumnLabel columnname);
 	columnname = upcase(columnname);
+run;
+
 proc sort;
 	by columnname;
 run;
@@ -156,6 +160,7 @@ run;
 data _null_;
   set meta_info (obs=1);
   RC=METADATA_SETATTR("omsobj:PhysicalTable?@Name='&vatable'","Desc","&tabledescription");
+  if RC NE 0 then put "Macro set_labels: Misslyckades med att sätta en beskrivning av tabellen";
 run;
 %end;
 
